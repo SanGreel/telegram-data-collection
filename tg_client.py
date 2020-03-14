@@ -1,17 +1,38 @@
 from telethon import TelegramClient, events, sync
 
-api_id = 1310963
-api_hash = 'c3647146b1aeb55cae072386b07b08dc'
-
-client = TelegramClient('julia', api_id, api_hash)
 
 
-async def main():
-    async for dialog in client.iter_dialogs():
-        print('{:>14}: {}'.format(dialog.id, dialog.title))
+if __name__ == "__main__":
+    api_id =
+    api_hash = ''
 
-    # message = await client.get_messages(ids)
-    # print(message)
+    msg_folder = 'data/msg/'
 
-with client:
-    client.loop.run_until_complete(main())
+    j_and_a_dialog_id = 325314319
+    msg_limit = 10
+
+    session_name = 'tmp'
+
+    client = TelegramClient(session_name, api_id, api_hash)
+
+    async def main():
+        dialogs = await client.get_dialogs()
+
+        for d in dialogs:
+            id = d.id
+
+            text = ''
+
+            channel_entity = await client.get_entity(id)
+            messages = await client.get_messages(channel_entity, limit=msg_limit)
+
+            for m in messages:
+                text = text + '\n' + str(m.message)
+
+            print(id)
+
+            with open(msg_folder+str(id)+".txt", "w") as text_file:
+                text_file.write(text)
+
+    with client:
+        client.loop.run_until_complete(main())
