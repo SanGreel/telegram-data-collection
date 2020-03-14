@@ -11,7 +11,7 @@ if __name__ == "__main__":
     j_and_a_dialog_id = 325314319
     msg_limit = 10
 
-    session_name = 'tmp'
+    session_name = 'tmp2'
 
     client = TelegramClient(session_name, api_id, api_hash)
 
