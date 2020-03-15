@@ -3,8 +3,8 @@ from telethon import TelegramClient, events, sync
 
 
 if __name__ == "__main__":
-    api_id =
-    api_hash = ''
+    api_id = 1310963
+    api_hash = 'c3647146b1aeb55cae072386b07b08dc'
 
     msg_folder = 'data/msg/'
 
