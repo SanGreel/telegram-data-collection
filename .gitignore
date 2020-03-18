@@ -1,6 +1,6 @@
 data/msg/*
 
-config.json
+config/config.json
 
 .idea/
 
