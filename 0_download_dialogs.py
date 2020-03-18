@@ -9,7 +9,10 @@ session_name = 'tmp'
 
 if __name__ == "__main__":
 
-    with open('config/config.json') as json_file:
+    # TODO: read path to config from command line args to open with command: "python 0_download_dialogs.py -config_path='config/config.json'"
+    config_path = 'config/config.json'
+
+    with open(config_path) as json_file:
         config = json.load(json_file)
 
     api_id = config['api_id']
@@ -44,10 +47,13 @@ if __name__ == "__main__":
         #     try:
         #         async for user in client.iter_participants(d):
         #             users_names = user.username
-        # # TODO: add proper exception 
+
+        # TODO: add proper exception (Andrew)
         #     except:
         #         # print("ChatAdminRequiredError")
-    
+
+        # TODO: save to JSON file, with type_of_dialog
+        #
         #         metadata = {
         #             "id": dialog_id,
         #             "name": name_of_dialog,
