@@ -1,5 +1,7 @@
 data/msg/*
+data/meta/*
 
+tmp.sessions
 config/config.json
 
 .idea/

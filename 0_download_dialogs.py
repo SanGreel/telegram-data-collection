@@ -1,5 +1,6 @@
-import configparser
+
 import json
+import argparse
 
 
 from telethon import TelegramClient, events, sync, errors
@@ -7,30 +8,67 @@ from telethon import TelegramClient, events, sync, errors
 session_name = 'tmp'
 
 
+def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
+    # TODO: fix encoding problem
+    metadata = {
+        "id": dialog_id,
+        "name": name_of_dialog,
+        "users": users_names,
+        "type": type_of_dialog
+    }
+
+    print(metadata)
+
+    dialog_file_path = meta_folder + str(dialog_id) + ".json"
+    with open(dialog_file_path, "w+", encoding='utf8') as meta_file:
+        json.dump(metadata, meta_file)
+        print(f'saved {dialog_file_path}')
+        print('\n')
+
 if __name__ == "__main__":
 
-    # TODO: read path to config from command line args to open with command: "python 0_download_dialogs.py -config_path='config/config.json'"
-    config_path = 'config/config.json'
+    parser = argparse.ArgumentParser(description='Download dialogs data for account.')
 
-    with open(config_path) as json_file:
+    parser.add_argument('--dialogs_limit', type=int, help='number of diaglos', required=True)
+    parser.add_argument('--config_path', type=str, help='path to config file', default='config/config.json')
+    parser.add_argument('--debug_mode', type=int, help='Debug mode', default=0)
+
+    args = parser.parse_args()
+    print(args)
+
+    CONFIG_PATH = args.config_path
+    DEBUG_MODE = args.debug_mode
+    DIALOGS_LIMIT = args.dialogs_limit
+
+    with open(CONFIG_PATH) as json_file:
         config = json.load(json_file)
 
     api_id = config['api_id']
-    api_hash = config['api_hash']   
+    api_hash = config['api_hash']
 
     msg_folder = 'data/msg/'
     meta_folder = 'data/meta/'
 
     j_and_a_dialog_id = 325314319
-    msg_limit = 10
+
 
     client = TelegramClient(session_name, api_id, api_hash)
 
     async def main():
         dialogs = await client.get_dialogs()
-        
-        # Getting id for each dialog in the list of dialogs  
+
+        k = 0
+
+        # Getting id for each dialog in the list of dialogs
         for d in dialogs:
+            print(f'step #{k}')
+            # print(DIALOGS_LIMIT)
+            if DIALOGS_LIMIT != -1 and k > DIALOGS_LIMIT:
+                print('exit')
+                exit(0)
+
+            k += 1
+
             dialog_id = d.id
             name_of_dialog = d.name
 
@@ -42,43 +80,18 @@ if __name__ == "__main__":
             elif d.is_channel == True:
                 type_of_dialog = "Channel type"
 
-            print(type_of_dialog)
+            try:
+                async for user in client.iter_participants(d):
+                    users_names = user.username
+                    save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
+            # TODO: add proper exception (Andrew)
+            except:
+                users_names = 'AdminRequiredError'
+                save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
-        #     try:
-        #         async for user in client.iter_participants(d):
-        #             users_names = user.username
+                print(f'ChatAdminRequiredError for {name_of_dialog}')
+                print('\n\n')
 
-        # TODO: add proper exception (Andrew)
-        #     except:
-        #         # print("ChatAdminRequiredError")
-
-        # TODO: save to JSON file, with type_of_dialog
-        #
-        #         metadata = {
-        #             "id": dialog_id,
-        #             "name": name_of_dialog,
-        #             "users": users_names
-        #     }
-
-        #         with open(meta_folder+str(dialog_id)+".json", "w") as meta_file:
-        #             json.dump(metadata, meta_file)
-
-
-            # text = ''
-
-        # Entity = объект, in this case, it's a dialog id and we pass it to the 'get_massages' method
-            # channel_entity = await client.get_entity(dialog_id)
-            # messages = await client.get_messages(channel_entity, limit=msg_limit)
-
-            # for m in messages:
-            #     text = text + '\n' + str(m.message)
-
-            # with open(msg_folder+str(id)+".txt", "w") as text_file:
-            #     text_file.write(text)
-
-
-
-    
 
     with client:
         client.loop.run_until_complete(main())
