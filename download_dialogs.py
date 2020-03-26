@@ -3,6 +3,7 @@ import json
 import argparse
 
 
+
 from telethon import TelegramClient, events, sync, errors
 
 session_name = 'tmp'
@@ -22,7 +23,7 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
     dialog_file_path = meta_folder + str(dialog_id) + ".json"
     with open(dialog_file_path, "w+", encoding='utf8') as meta_file:
         json.dump(metadata, meta_file)
-        print(f'saved {dialog_file_path}')
+        print(f"saved {dialog_file_path}")
         print('\n')
 
 if __name__ == "__main__":
@@ -71,6 +72,7 @@ if __name__ == "__main__":
 
             dialog_id = d.id
             name_of_dialog = d.name
+            users_names = []
 
 
             if d.is_user == True:
@@ -81,9 +83,11 @@ if __name__ == "__main__":
                 type_of_dialog = "Channel type"
 
             try:
-                async for user in client.iter_participants(d):
-                    users_names = user.username
+                async for u in client.get_participants(d):
+                    print(u)
+                    #TODO: fix downloading of users list
                     save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
+            
             # TODO: add proper exception (Andrew)
             except:
                 users_names = 'AdminRequiredError'
@@ -91,6 +95,7 @@ if __name__ == "__main__":
 
                 print(f'ChatAdminRequiredError for {name_of_dialog}')
                 print('\n\n')
+
 
 
     with client:
