@@ -10,7 +10,7 @@ session_name = 'tmp'
 
 
 def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
-    # TODO: fix encoding problem
+    # TODO: 2. fix encoding problem
     metadata = {
         "id": dialog_id,
         "name": name_of_dialog,
@@ -28,9 +28,9 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Download dialogs data for account.')
+    parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
 
-    parser.add_argument('--dialogs_limit', type=int, help='number of diaglos', required=True)
+    parser.add_argument('--dialogs_limit', type=int, help='number of dialogs', required=True)
     parser.add_argument('--config_path', type=str, help='path to config file', default='config/config.json')
     parser.add_argument('--debug_mode', type=int, help='Debug mode', default=0)
 
@@ -82,21 +82,21 @@ if __name__ == "__main__":
             elif d.is_channel == True:
                 type_of_dialog = "Channel type"
 
+            # TODO: 3. fix downloading of users list, only exception branch works now
             try:
                 async for u in client.get_participants(d):
-                    print(u)
-                    #TODO: fix downloading of users list
                     save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
             
-            # TODO: add proper exception (Andrew)
+            # TODO: 4. add proper exception (Andrew)
             except:
+
+                print('we are here')
+
                 users_names = 'AdminRequiredError'
                 save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
                 print(f'ChatAdminRequiredError for {name_of_dialog}')
                 print('\n\n')
-
-
 
     with client:
         client.loop.run_until_complete(main())
