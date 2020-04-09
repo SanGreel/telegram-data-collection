@@ -1,15 +1,15 @@
-## Telegram insights v0.01
+# Telegram insights v0.01
 Combination of tools to download your telegram data.
 
 
   
-#### Todo
-### Inprog
+## Todo
+#### Inprog
 2.1. [J] [1_dialog_data_manager.py] Show list of all dialogs (read from data/meta)
 2.1.1. 
 
 
-### Backlog
+#### Backlog
 0. Delete session from git tmp.session (Andrew handover)
 
 1. [0_download_dialogs_meta_data.py] - 60%
