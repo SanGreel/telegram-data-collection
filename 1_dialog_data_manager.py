@@ -7,14 +7,10 @@ if __name__ == "__main__":
     files = os.listdir(meta_folder)
 
     for f in files:
-        path = meta_folder + f
-        print(path)
 
-        with open(f, 'r', encoding="ISO-8859-1") as read_file:
+        with open(f, 'r') as read_file:
             dialogs_list = json.load(read_file)
-            for i in dialogs_list['id']['name']:
-                print(i)
-
+            print(dialogs_list)
 
 # # Entity = объект, in this case, it's a dialog id and we pass it to the 'get_massages' method
 # text = ''
@@ -28,9 +24,3 @@ if __name__ == "__main__":
 #
 #     with open(msg_folder+str(id)+".txt", "w") as text_file:
 #         text_file.write(messages)
-
-
-
-
-
-
