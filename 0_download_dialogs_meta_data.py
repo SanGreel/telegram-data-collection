@@ -1,7 +1,7 @@
 
 import json
 import argparse
-
+import os
 
 
 from telethon import TelegramClient, events, sync, errors
@@ -27,6 +27,10 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
         print('\n')
 
 if __name__ == "__main__":
+
+    meta_path = r'data/meta'
+    if not os.path.exists(meta_path):
+        os.mkdir(meta_path)
 
     parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
 
