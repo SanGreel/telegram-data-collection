@@ -3,12 +3,13 @@ import os
 
 if __name__ == "__main__":
 
-    meta_folder = 'data/meta/'
-    files = os.listdir(meta_folder)
+    metadata_folder = 'data/meta/'
+    files = os.listdir(metadata_folder)
 
     for f in files:
+        dialog_path = os.path.join(metadata_folder, f)
 
-        with open(f, 'r') as read_file:
+        with open(dialog_path, 'r') as read_file:
             dialogs_list = json.load(read_file)
             print(dialogs_list)
 

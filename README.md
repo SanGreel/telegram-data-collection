@@ -6,8 +6,6 @@ Combination of tools to download your telegram data.
 ## Todo
 #### Inprog
 2.1. [J] [1_dialog_data_manager.py] Show list of all dialogs (read from data/meta)
-2.1.1. `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc9` appears after running the code.
-2.1.2. `json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)` appears after using "encoding" argument for "open()"  
 
 
 #### Backlog
@@ -27,6 +25,9 @@ Combination of tools to download your telegram data.
 3.1 Download diagram from draw.io
 
 
+#### Done:
+2.1.1. BUG in the [1_dialog_data_manager.py] `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc9` appears after running the code.
+2.1.2. BUG in the [1_dialog_data_manager.py] `json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)` appears after using "encoding" argument for "open()"  
 
 
 ## Documentation
