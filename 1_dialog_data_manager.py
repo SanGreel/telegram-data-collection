@@ -1,28 +1,33 @@
 import json
 import os
 
-if __name__ == "__main__":
-
-    metadata_folder = 'data/meta/'
+def read_dialogs(metadata_folder = 'data/meta/'):
+    dialogs_list = []
     files = os.listdir(metadata_folder)
-
-    n = 1
 
     for f in files:
         dialog_path = os.path.join(metadata_folder, f)
 
         with open(dialog_path, 'r') as read_file:
             dialogs_data = json.load(read_file)
-            dialogs_list = []
             dialogs_list.append(dialogs_data)
+    return dialogs_list
 
-            for dialog in dialogs_list:
-                print(f'\ndialog #{n}')
-                n += 1
 
-                for element in dialog.items():
-                    key, val = element
-                    print("{:<20} {:<15}".format(key, val))
+
+if __name__ == "__main__":
+    metadata_folder = 'data/meta/'
+    dialogs_list = read_dialogs(metadata_folder)
+
+    n = 1
+
+    for dialog in dialogs_list:
+        print(f'\ndialog #{n}')
+        n += 1
+
+        for element in dialog.items():
+            key, val = element
+            print("{:<20} {:<15}".format(key, val))
 
 
 

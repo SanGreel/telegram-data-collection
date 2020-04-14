@@ -7,17 +7,24 @@ Combination of tools to download your telegram data.
 #### Inprog
 
 
-
+2.2.1. Get input arguments:
+a)show_dialogs INT
+b)download_dialog INT
+logic can be copied from the [0_download_dialogs_meta_data.py]
 
 
 
 #### Backlog
+2. [1_dialog_data_manager.py] - 15%
+2.2. [J] [1_dialog_data_manager.py] Download dialog by ID
 
 
 
+2.2.2. If input show_dialogs is >0, show number of dialogs defined in the argument value
+2.2.3. If input download_dialog is not empty show
+"Download dialog with id #{value}"
 
 
-0. Delete session from git tmp.session (Andrew handover)
 
 1. [0_download_dialogs_meta_data.py] - 60%
 1.1. [0_download_dialogs_meta_data.py] Create data/meta folder if not exists
@@ -26,8 +33,6 @@ Combination of tools to download your telegram data.
 1.4. [0_download_dialogs_meta_data.py] Add proper exception (Andrew)
 1.5. [0_download_dialogs_meta_data.py] Refactoring
 
-2. [1_dialog_data_manager.py] - 0%
-2.2. [1_dialog_data_manager.py] Download dialog by ID
 
 3. Documentation - 85%
 3.1 Download diagram from draw.io
@@ -43,6 +48,7 @@ el = {"a":1,"b":2}
 a.append(el)`
 2.4. [J] [1_dialog_data_manager.py] Print "dialogs_list" as table with columns in the terminal.
 
+0. Delete session from git tmp.session (Andrew handover)
 
 ## Documentation
 
