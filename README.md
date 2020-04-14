@@ -5,17 +5,14 @@ Combination of tools to download your telegram data.
   
 ## Todo
 #### Inprog
-2.3. [J] [1_dialog_data_manager.py] Read dialogs in the list(example "dialogs_list"), each list element should be dict with dialog meta data.
-`a=[]
-el = {"a":1,"b":2}
-a.append(el)`
+
 
 
 
 
 
 #### Backlog
-2.4. [J] [1_dialog_data_manager.py] Print "dialogs_list" as table with columns in the terminal.
+
 
 
 
@@ -39,7 +36,12 @@ a.append(el)`
 #### Done:
 2.1. [J] [1_dialog_data_manager.py] Show list of all dialogs (read from data/meta)
 2.1.1. BUG in the [1_dialog_data_manager.py] `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc9` appears after running the code.
-2.1.2. BUG in the [1_dialog_data_manager.py] `json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)` appears after using "encoding" argument for "open()"  
+2.1.2. BUG in the [1_dialog_data_manager.py] `json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)` appears after using "encoding" argument for "open()" 
+2.3. [J] [1_dialog_data_manager.py] Read dialogs in the list(example "dialogs_list"), each list element should be dict with dialog meta data.
+`a=[]
+el = {"a":1,"b":2}
+a.append(el)`
+2.4. [J] [1_dialog_data_manager.py] Print "dialogs_list" as table with columns in the terminal.
 
 
 ## Documentation
