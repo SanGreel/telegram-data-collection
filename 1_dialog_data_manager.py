@@ -6,12 +6,27 @@ if __name__ == "__main__":
     metadata_folder = 'data/meta/'
     files = os.listdir(metadata_folder)
 
+    n = 1
+
     for f in files:
         dialog_path = os.path.join(metadata_folder, f)
 
         with open(dialog_path, 'r') as read_file:
-            dialogs_list = json.load(read_file)
-            print(dialogs_list)
+            dialogs_data = json.load(read_file)
+            dialogs_list = []
+            dialogs_list.append(dialogs_data)
+
+            for dialog in dialogs_list:
+                print(f'\ndialog #{n}')
+                n += 1
+
+                for element in dialog.items():
+                    key, val = element
+                    print("{:<20} {:<15}".format(key, val))
+
+
+
+
 
 # # Entity = объект, in this case, it's a dialog id and we pass it to the 'get_massages' method
 # text = ''
