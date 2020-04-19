@@ -25,8 +25,6 @@ c)download msgs from all dialogs, input "-1"
 3. Documentation - 85%
 3.1 Download diagram from draw.io
 
-4. Remove msg data from repo.
-
 #### Done:
 2.1. [J] [1_dialog_data_manager.py] Show list of all dialogs (read from data/meta)
 2.1.1. BUG in the [1_dialog_data_manager.py] `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc9` appears after running the code.
