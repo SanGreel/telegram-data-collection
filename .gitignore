@@ -1,5 +1,6 @@
 data/msg/*
 data/meta/*
+data/msg/*
 
 tmp.session
 config/config.json
