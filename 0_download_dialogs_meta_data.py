@@ -34,9 +34,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
 
-    parser.add_argument('--dialogs_limit', type=int, help='number of dialogs', required=True)
+    parser.add_argument('--dialogs_limit', type=int, help='number of dialogs')
     parser.add_argument('--config_path', type=str, help='path to config file', default='config/config.json')
     parser.add_argument('--debug_mode', type=int, help='Debug mode', default=0)
+    parser.add_argument('--dialog_id', type=int, help='id of dialog to download')
 
     args = parser.parse_args()
     print(args)
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     CONFIG_PATH = args.config_path
     DEBUG_MODE = args.debug_mode
     DIALOGS_LIMIT = args.dialogs_limit
+    DIALOG_ID = args.dialog_id
 
     with open(CONFIG_PATH) as json_file:
         config = json.load(json_file)
@@ -62,15 +64,14 @@ if __name__ == "__main__":
     async def main():
         dialogs = await client.get_dialogs()
 
-        k = 0
+        k = 1
 
         # Getting id for each dialog in the list of dialogs
         for d in dialogs:
-            print(f'step #{k}')
             # print(DIALOGS_LIMIT)
             if DIALOGS_LIMIT != -1 and k > DIALOGS_LIMIT:
-                print('exit')
                 exit(0)
+            print(f'step #{k}')
 
             k += 1
 
@@ -86,21 +87,27 @@ if __name__ == "__main__":
             elif d.is_channel == True:
                 type_of_dialog = "Channel type"
 
+            participants = await client.get_participants(d)
+
             # TODO: 3. fix downloading of users list, only exception branch works now
             try:
-                async for u in client.get_participants(d):
+                async for u in participants:
                     save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
             
             # TODO: 4. add proper exception (Andrew)
             except:
 
                 print('we are here')
-
-                users_names = 'AdminRequiredError'
                 save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
                 print(f'ChatAdminRequiredError for {name_of_dialog}')
                 print('\n\n')
+
+        """Download dialog by id"""
+        channel_entity = await client.get_entity(DIALOG_ID)
+        messages = await client.get_messages(channel_entity, ids=DIALOG_ID)
+
+        print(messages)
 
     with client:
         client.loop.run_until_complete(main())
