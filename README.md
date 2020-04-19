@@ -5,25 +5,14 @@ Combination of tools to download your telegram data.
   
 ## Todo
 #### Inprog
-
-
-2.2.1. Get input arguments:
-a)show_dialogs INT
-b)download_dialog INT
-logic can be copied from the [0_download_dialogs_meta_data.py]
-
+[J] 2.3. We download single dialog by ID now, this logic should be done for 3 different inputs:
+a)single dialog id (current logic), input "1"
+b)coma separated list of ids, input "1,2,3"
+c)download msgs from all dialogs, input "-1"
 
 
 #### Backlog
-2. [1_dialog_data_manager.py] - 15%
-2.2. [J] [1_dialog_data_manager.py] Download dialog by ID
-
-
-
-2.2.2. If input show_dialogs is >0, show number of dialogs defined in the argument value
-2.2.3. If input download_dialog is not empty show
-"Download dialog with id #{value}"
-
+2. [1_dialog_data_manager.py] - 35%
 
 
 1. [0_download_dialogs_meta_data.py] - 60%
@@ -32,7 +21,6 @@ logic can be copied from the [0_download_dialogs_meta_data.py]
 1.3. [0_download_dialogs_meta_data.py] Fix downloading of users list, only exception branch works now 
 1.4. [0_download_dialogs_meta_data.py] Add proper exception (Andrew)
 1.5. [0_download_dialogs_meta_data.py] Refactoring
-
 
 3. Documentation - 85%
 3.1 Download diagram from draw.io
@@ -50,6 +38,15 @@ a.append(el)`
 
 0. Delete session from git tmp.session (Andrew handover)
 
+2.2.1. Get input arguments:
+a)show_dialogs INT
+b)download_dialog INT
+logic can be copied from the [0_download_dialogs_meta_data.py]
+
+2.2. [A] [1_dialog_data_manager.py] Download dialog by ID
+2.2.2. If input show_dialogs is >0, show number of dialogs defined in the argument value
+2.2.3. If input download_dialog is not empty show
+"Download dialog with id #{value}"
 ## Documentation
 
 ### Structure

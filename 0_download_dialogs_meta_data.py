@@ -1,10 +1,8 @@
-
 import json
 import argparse
 import os
 
-
-from telethon import TelegramClient, events, sync, errors
+from utils import init_config, init_client
 
 session_name = 'tmp'
 
@@ -26,9 +24,10 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
         print(f"saved {dialog_file_path}")
         print('\n')
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     meta_path = r'data/meta'
+
     if not os.path.exists(meta_path):
         os.mkdir(meta_path)
 
@@ -47,19 +46,12 @@ if __name__ == "__main__":
     DIALOGS_LIMIT = args.dialogs_limit
     DIALOG_ID = args.dialog_id
 
-    with open(CONFIG_PATH) as json_file:
-        config = json.load(json_file)
-
-    api_id = config['api_id']
-    api_hash = config['api_hash']
-
-    msg_folder = 'data/msg/'
-    meta_folder = 'data/meta/'
-
     j_and_a_dialog_id = 325314319
 
+    config = init_config(CONFIG_PATH)
+    client = init_client(session_name, config['api_id'], config['api_hash'])
 
-    client = TelegramClient(session_name, api_id, api_hash)
+    #TODO: fix problem with msg_folder, and meta_folder. They aren't variables now, they are in the config var
 
     async def main():
         dialogs = await client.get_dialogs()
