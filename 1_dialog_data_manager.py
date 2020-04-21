@@ -8,9 +8,10 @@ from utils import init_config, init_client
 
 session_name = 'tmp'
 
+dialogs_list = []
+
 
 def read_dialogs(metadata_folder = 'data/meta/'):
-    dialogs_list = []
     files = os.listdir(metadata_folder)
 
     for f in files:
@@ -37,8 +38,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
 
     parser.add_argument('--show_dialogs', type=int, help='number of dialogs to show', default=None)
-    parser.add_argument('--dialog_id', type=int, help='id of dialog to download')
-    parser.add_argument('--dialog_msg_limit', type=int, help='amount of messages to download from one dialog', default=100)
+    parser.add_argument('--dialog_id', nargs='+', type=int, help='id of dialog to download')
+    parser.add_argument('--dialog_msg_limit', type=int, help='amount of messages to download from dialog', default=100)
     parser.add_argument('--config_path', type=str, help='path to config file', default='config/config.json')
 
     args = parser.parse_args()
@@ -68,32 +69,44 @@ if __name__ == "__main__":
         show_dialogs(number_of_dialogs_to_show)
 
     # download single dialog
+
     if DIALOG_ID is not None:
-        config = init_config(CONFIG_PATH)
-        client = init_client(session_name, config['api_id'], config['api_hash'])
+        for d in DIALOG_ID:
 
-        async def not_main():
-            channel_entity = await client.get_entity(DIALOG_ID)
-            messages = await client.get_messages(channel_entity, limit=MSG_LIMIT)
+            config = init_config(CONFIG_PATH)
+            client = init_client(session_name, config['api_id'], config['api_hash'])
 
-            dialog = []
 
-            for m in messages:
-                dialog.append({
-                    "id": m.id,
-                    "date": m.date,
-                    "from_id": m.from_id,
-                    "to_id": m.to_id.user_id,
-                    "fwd_from": m.fwd_from,
-                    "message": m.message
-                })
+            async def not_main():
+                channel_entity = await client.get_entity(d)
+                messages = await client.get_messages(channel_entity, limit=MSG_LIMIT)
 
-                print(f'dwnld {m.id}')
+                dialog = []
 
-            dialog_file_path = config['msg_folder'] + '/' + str(DIALOG_ID) + ".csv"
+                for m in messages:
+                    dialog.append({
+                        "id": m.id,
+                        "date": m.date,
+                        "from_id": m.from_id,
+                        "to_id": m.to_id.user_id,
+                        "fwd_from": m.fwd_from,
+                        "message": m.message
+                    })
 
-            df = pd.DataFrame(dialog)
-            df.to_csv(dialog_file_path)
+                dialog_file_path = config['msg_folder'] + '/' + str(d) + ".csv"
 
-        with client:
-            client.loop.run_until_complete(not_main())
+                df = pd.DataFrame(dialog)
+                df.to_csv(dialog_file_path)
+
+
+            with client:
+                client.loop.run_until_complete(not_main())
+
+
+
+        """If there's no such id"""
+
+        # if DIALOG_ID != d['id']:
+        #     for d in dialogs_list:
+        #         no_id = "There is no dialog with such id"
+        # print(no_id)

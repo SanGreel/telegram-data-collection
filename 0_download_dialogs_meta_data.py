@@ -18,7 +18,7 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
 
     print(metadata)
 
-    dialog_file_path = meta_folder + str(dialog_id) + ".json"
+    dialog_file_path = config['meta_folder'] + str(dialog_id) + ".json"
     with open(dialog_file_path, "w+", encoding='utf8') as meta_file:
         json.dump(metadata, meta_file)
         print(f"saved {dialog_file_path}")
@@ -46,12 +46,13 @@ if __name__ == "__main__":
     DIALOGS_LIMIT = args.dialogs_limit
     DIALOG_ID = args.dialog_id
 
-    j_and_a_dialog_id = 325314319
+    j_and_a_dialog_id = 331192040
 
     config = init_config(CONFIG_PATH)
     client = init_client(session_name, config['api_id'], config['api_hash'])
 
-    #TODO: fix problem with msg_folder, and meta_folder. They aren't variables now, they are in the config var
+
+    # TODO: fix problem with msg, and meta_folder. They aren't variables now, they are in the config var
 
     async def main():
         dialogs = await client.get_dialogs()
@@ -71,7 +72,6 @@ if __name__ == "__main__":
             name_of_dialog = d.name
             users_names = []
 
-
             if d.is_user == True:
                 type_of_dialog = "Private dialog"
             elif d.is_group == True:
@@ -79,13 +79,11 @@ if __name__ == "__main__":
             elif d.is_channel == True:
                 type_of_dialog = "Channel type"
 
-            participants = await client.get_participants(d)
-
             # TODO: 3. fix downloading of users list, only exception branch works now
             try:
-                async for u in participants:
+                async for u in client.get_participants(d):
                     save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
-            
+
             # TODO: 4. add proper exception (Andrew)
             except:
 
@@ -95,11 +93,6 @@ if __name__ == "__main__":
                 print(f'ChatAdminRequiredError for {name_of_dialog}')
                 print('\n\n')
 
-        """Download dialog by id"""
-        channel_entity = await client.get_entity(DIALOG_ID)
-        messages = await client.get_messages(channel_entity, ids=DIALOG_ID)
-
-        print(messages)
 
     with client:
         client.loop.run_until_complete(main())
