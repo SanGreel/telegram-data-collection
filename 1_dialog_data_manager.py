@@ -32,6 +32,7 @@ def show_dialogs(n):
 
 
 if __name__ == "__main__":
+
     metadata_folder = 'data/meta/'
     dialogs_list = read_dialogs(metadata_folder)
 
@@ -49,6 +50,10 @@ if __name__ == "__main__":
     SHOW_DIALOGS = args.show_dialogs
     DIALOG_ID = args.dialog_id
     MSG_LIMIT = args.dialog_msg_limit
+
+    config = init_config(CONFIG_PATH)
+    if not os.path.exists(config['msg_folder']):
+        os.mkdir(config['msg_folder'])
 
     # TODO: check if can be improved
     if MSG_LIMIT == -1:
@@ -75,7 +80,6 @@ if __name__ == "__main__":
 
             config = init_config(CONFIG_PATH)
             client = init_client(session_name, config['api_id'], config['api_hash'])
-
 
             async def not_main():
                 channel_entity = await client.get_entity(d)

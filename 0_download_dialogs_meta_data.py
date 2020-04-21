@@ -26,17 +26,12 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
 
 
 if __name__ == "__main__":
-    meta_path = r'data/meta'
-
-    if not os.path.exists(meta_path):
-        os.mkdir(meta_path)
 
     parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
 
-    parser.add_argument('--dialogs_limit', type=int, help='number of dialogs')
+    parser.add_argument('--dialogs_limit', type=int, help='number of dialogs', required=True)
     parser.add_argument('--config_path', type=str, help='path to config file', default='config/config.json')
     parser.add_argument('--debug_mode', type=int, help='Debug mode', default=0)
-    parser.add_argument('--dialog_id', type=int, help='id of dialog to download')
 
     args = parser.parse_args()
     print(args)
@@ -44,13 +39,14 @@ if __name__ == "__main__":
     CONFIG_PATH = args.config_path
     DEBUG_MODE = args.debug_mode
     DIALOGS_LIMIT = args.dialogs_limit
-    DIALOG_ID = args.dialog_id
 
     j_and_a_dialog_id = 331192040
 
     config = init_config(CONFIG_PATH)
     client = init_client(session_name, config['api_id'], config['api_hash'])
 
+    if not os.path.exists(config['meta_folder']):
+        os.mkdir(config['meta_folder'])
 
     # TODO: fix problem with msg, and meta_folder. They aren't variables now, they are in the config var
 
