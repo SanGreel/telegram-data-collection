@@ -2,10 +2,9 @@ import json
 import argparse
 import os
 
-from utils import init_config, init_client
+from utils import init_config, init_tg_client
 
 session_name = 'tmp'
-
 
 def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
     # TODO: 2. fix encoding problem
@@ -90,5 +89,40 @@ if __name__ == "__main__":
                 print('\n\n')
 
 
+
+    # # both arguments are empty
+    # if SHOW_DIALOGS is None \
+    #         and DIALOG_ID is None:
+    #     # print('ERROR: at least one argument should be passed')
+    #     raise ValueError('ERROR: at least one argument should be passed')
+    #
+    # if not os.path.exists(config['msg_folder']):
+    #     os.mkdir(config['msg_folder'])
+    #
+    # # TODO: check if can be improved
+    # if MSG_LIMIT == -1:
+    #     MSG_LIMIT = 1000000000
+    #
+    #
+    #
+    # # show dialogs list
+    # if SHOW_DIALOGS is not None:
+    #     number_of_dialogs_to_show = SHOW_DIALOGS
+    #
+    #     if number_of_dialogs_to_show > len(dialogs_list):
+    #         number_of_dialogs_to_show = len(dialogs_list)
+    #
+    #     show_dialogs(number_of_dialogs_to_show)
+    #
+    # # download single dialog          -1001314742214
+    #                                          -1001314742214
+
+    # parser.add_argument('--show_dialogs', type=int, help='number of dialogs to show', default=None)
+    # def show_dialogs(n):
+    #     for i in range(0, number_of_dialogs_to_show):
+    #         dialog = dialogs_list[i]
+    #         print(f"ID #{dialog['id']}")
+    #         print(f"{dialog['name']}")
+    #         print('\n')
     with client:
         client.loop.run_until_complete(main())

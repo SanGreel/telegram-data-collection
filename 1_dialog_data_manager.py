@@ -1,116 +1,86 @@
-import json
 import os
 import argparse
-import csv
 import pandas as pd
 
-from utils import init_config, init_client
-
-session_name = 'tmp'
-
-dialogs_list = []
+from utils import init_config, init_tg_client, read_dialogs
 
 
-def read_dialogs(metadata_folder = 'data/meta/'):
-    files = os.listdir(metadata_folder)
+def init_tool_config_arg():
+    parser = argparse.ArgumentParser(description='Step #2.Download dialogs')
 
-    for f in files:
-        dialog_path = os.path.join(metadata_folder, f)
+    parser.add_argument(
+        '--dialogs_ids',
+        nargs='+',
+        type=int,
+        help='id(s) of dialog(s) to download, -1 for all',
+        required=True
+    )
+    parser.add_argument(
+        '--dialog_msg_limit',
+        type=int,
+        help='amount of messages to download from a dialog',
+        default=100
+    )
+    parser.add_argument(
+        '--config_path',
+        type=str,
+        help='path to config file',
+        default='config/config.json'
+    )
+    parser.add_argument(
+        '--session_name',
+        type=str,
+        help='session name',
+        default='tmp'
+    )
 
-        with open(dialog_path, 'r') as read_file:
-            dialogs_data = json.load(read_file)
-            dialogs_list.append(dialogs_data)
-    return dialogs_list
-
-
-def show_dialogs(n):
-    for i in range(0, number_of_dialogs_to_show):
-        dialog = dialogs_list[i]
-        print(f"ID #{dialog['id']}")
-        print(f"{dialog['name']}")
-        print('\n')
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
 
-    metadata_folder = 'data/meta/'
-    dialogs_list = read_dialogs(metadata_folder)
-
-    parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
-
-    parser.add_argument('--show_dialogs', type=int, help='number of dialogs to show', default=None)
-    parser.add_argument('--dialog_id', nargs='+', type=int, help='id of dialog to download')
-    parser.add_argument('--dialog_msg_limit', type=int, help='amount of messages to download from dialog', default=100)
-    parser.add_argument('--config_path', type=str, help='path to config file', default='config/config.json')
-
-    args = parser.parse_args()
-    # print(args)
+    args = init_tool_config_arg()
 
     CONFIG_PATH = args.config_path
-    SHOW_DIALOGS = args.show_dialogs
-    DIALOG_ID = args.dialog_id
+    DIALOG_ID = args.dialogs_ids
     MSG_LIMIT = args.dialog_msg_limit
+    SESSION_NAME = args.session_name
 
     config = init_config(CONFIG_PATH)
-    if not os.path.exists(config['msg_folder']):
-        os.mkdir(config['msg_folder'])
+    dialogs_list = read_dialogs(config['dialogs_metadata_folder'])
 
-    # TODO: check if can be improved
-    if MSG_LIMIT == -1:
-        MSG_LIMIT = 1000000000
+    client = init_tg_client(SESSION_NAME, config['api_id'], config['api_hash'])
 
-    # both arguments are empty
-    if SHOW_DIALOGS is None \
-            and DIALOG_ID is None:
-        print('ERROR: at least one argument should be passed')
+    for d in DIALOG_ID:
+        print(f'dialog #{d}')
 
-    # show dialogs list
-    if SHOW_DIALOGS is not None:
-        number_of_dialogs_to_show = SHOW_DIALOGS
+        async def download_dialog():
 
-        if number_of_dialogs_to_show > len(dialogs_list):
-            number_of_dialogs_to_show = len(dialogs_list)
+            # TODO: add handler for wrong IDs
+            tg_entity = await client.get_entity(d)
+            messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
 
-        show_dialogs(number_of_dialogs_to_show)
+            dialog = []
 
-    # download single dialog
+            for m in messages:
+                if hasattr(m.to_id, 'user_id'):
+                    to_id = m.to_id.user_id
+                else:
+                    to_id = m.to_id
 
-    if DIALOG_ID is not None:
-        for d in DIALOG_ID:
+                dialog.append({
+                    "id": m.id,
+                    "date": m.date,
+                    "from_id": m.from_id,
+                    "to_id": to_id,
+                    "fwd_from": m.fwd_from,
+                    "message": m.message
+                })
 
-            config = init_config(CONFIG_PATH)
-            client = init_client(session_name, config['api_id'], config['api_hash'])
+            dialog_file_path = os.path.join(config['dialogs_data_folder'], f'{str(d)}.csv')
 
-            async def not_main():
-                channel_entity = await client.get_entity(d)
-                messages = await client.get_messages(channel_entity, limit=MSG_LIMIT)
+            df = pd.DataFrame(dialog)
+            df.to_csv(dialog_file_path)
 
-                dialog = []
-
-                for m in messages:
-                    dialog.append({
-                        "id": m.id,
-                        "date": m.date,
-                        "from_id": m.from_id,
-                        "to_id": m.to_id.user_id,
-                        "fwd_from": m.fwd_from,
-                        "message": m.message
-                    })
-
-                dialog_file_path = config['msg_folder'] + '/' + str(d) + ".csv"
-
-                df = pd.DataFrame(dialog)
-                df.to_csv(dialog_file_path)
-
-
-            with client:
-                client.loop.run_until_complete(not_main())
-
-
-
-        """If there's no such id"""
-
-        # if DIALOG_ID != d['id']:
-        #     for d in dialogs_list:
-        #         no_id = "There is no dialog with such id"
-        # print(no_id)
+        with client:
+            client.loop.run_until_complete(download_dialog())
