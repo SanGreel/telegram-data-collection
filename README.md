@@ -9,14 +9,14 @@ Combination of tools to download your telegram data.
 a)single dialog id (current logic), input "1"
 b)coma separated list of ids, input "1,2,3"
 c)download msgs from all dialogs, input "-1"
+2.4 Print an error when there is no such id
 
 
 #### Backlog
-2. [1_dialog_data_manager.py] - 35%
+2. [1_dialog_data_manager.py] - 50%
 
 
 1. [0_download_dialogs_meta_data.py] - 60%
-1.1. [0_download_dialogs_meta_data.py] Create data/meta folder if not exists
 1.2. [0_download_dialogs_meta_data.py] Fix problem with cyrillic encoding in save_dialog()
 1.3. [0_download_dialogs_meta_data.py] Fix downloading of users list, only exception branch works now 
 1.4. [0_download_dialogs_meta_data.py] Add proper exception (Andrew)
@@ -34,6 +34,8 @@ c)download msgs from all dialogs, input "-1"
 el = {"a":1,"b":2}
 a.append(el)`
 2.4. [J] [1_dialog_data_manager.py] Print "dialogs_list" as table with columns in the terminal.
+
+1.1. [0_download_dialogs_meta_data.py] Create data/meta folder if not exists
 
 0. Delete session from git tmp.session (Andrew handover)
 
