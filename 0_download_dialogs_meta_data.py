@@ -2,47 +2,49 @@ import json
 import argparse
 import os
 
-from utils import init_config, init_tg_client
-
-session_name = 'tmp'
-
-def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
-    # TODO: 2. fix encoding problem
-    metadata = {
-        "id": dialog_id,
-        "name": name_of_dialog,
-        "users": users_names,
-        "type": type_of_dialog
-    }
-
-    print(metadata)
-
-    dialog_file_path = config['dialogs_metadata_folder'] + str(dialog_id) + ".json"
-    with open(dialog_file_path, "w+", encoding='utf8') as meta_file:
-        json.dump(metadata, meta_file)
-        print(f"saved {dialog_file_path}")
-        print('\n')
+from utils import init_config, init_tg_client, save_dialog
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
 
-    parser.add_argument('--dialogs_limit', type=int, help='number of dialogs', required=True)
-    parser.add_argument('--config_path', type=str, help='path to config file', default='config/config.json')
-    parser.add_argument('--debug_mode', type=int, help='Debug mode', default=0)
+    parser.add_argument(
+        '--dialogs_limit',
+        type=int,
+        help='number of dialogs',
+        required=True
+    )
+    parser.add_argument(
+        '--config_path',
+        type=str,
+        help='path to config file',
+        default='config/config.json'
+    )
+    parser.add_argument(
+        '--debug_mode',
+        type=int,
+        help='Debug mode',
+        default=0
+    )
+    parser.add_argument(
+        '--session_name',
+        type=str,
+        help='session name',
+        default='tmp'
+    )
 
     args = parser.parse_args()
-    print(args)
 
     CONFIG_PATH = args.config_path
     DEBUG_MODE = args.debug_mode
     DIALOGS_LIMIT = args.dialogs_limit
+    SESSION_NAME = args.session_name
 
     j_and_a_dialog_id = 331192040
 
     config = init_config(CONFIG_PATH)
-    client = init_tg_client(session_name, config['api_id'], config['api_hash'])
+    client = init_tg_client(SESSION_NAME, config['api_id'], config['api_hash'])
 
     if not os.path.exists(config['dialogs_metadata_folder']):
         os.mkdir(config['dialogs_metadata_folder'])

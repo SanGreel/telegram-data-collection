@@ -5,11 +5,8 @@ Combination of tools to download your telegram data.
   
 ## Todo
 #### Inprog
-[J] 2.3. We download single dialog by ID now, this logic should be done for 3 different inputs:
-a)single dialog id (current logic), input "1"
-b)coma separated list of ids, input "1,2,3"
-c)download msgs from all dialogs, input "-1"
-2.4 Print an error when there is no such id
+[J] 2.4 Print an error when there is no such id
+[A] 2.5 Fix problem with entities while downloading msg from all dialogs
 
 
 #### Backlog
@@ -48,6 +45,11 @@ logic can be copied from the [0_download_dialogs_meta_data.py]
 2.2.2. If input show_dialogs is >0, show number of dialogs defined in the argument value
 2.2.3. If input download_dialog is not empty show
 "Download dialog with id #{value}"
+
+2.3. We download single dialog by ID now, this logic should be done for 3 different inputs:
+a)single dialog id (current logic), input "1"
+b)coma separated list of ids, input "1,2,3"
+c)download msgs from all dialogs, input "-1"
 ## Documentation
 
 ### Structure

@@ -51,6 +51,15 @@ if __name__ == "__main__":
 
     client = init_tg_client(SESSION_NAME, config['api_id'], config['api_hash'])
 
+    if DIALOG_ID[0] == -1:
+        DIALOG_ID = []
+        for d in dialogs_list:
+            DIALOG_ID.append(d['id'])
+
+    # TODO: add a logic to download all msgs
+    if MSG_LIMIT == -1:
+        MSG_LIMIT = 100000000
+
     for d in DIALOG_ID:
         print(f'dialog #{d}')
 
