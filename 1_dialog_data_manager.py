@@ -47,7 +47,7 @@ if __name__ == "__main__":
     SESSION_NAME = args.session_name
 
     config = init_config(CONFIG_PATH)
-    dialogs_list = read_dialogs(config['dialogs_data_folder'])
+    dialogs_list = read_dialogs(config['dialogs_metadata_folder'])
 
     client = init_tg_client(SESSION_NAME, config['api_id'], config['api_hash'])
 
