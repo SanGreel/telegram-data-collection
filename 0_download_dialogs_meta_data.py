@@ -17,7 +17,7 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
 
     print(metadata)
 
-    dialog_file_path = config['meta_folder'] + str(dialog_id) + ".json"
+    dialog_file_path = config['dialogs_metadata_folder'] + str(dialog_id) + ".json"
     with open(dialog_file_path, "w+", encoding='utf8') as meta_file:
         json.dump(metadata, meta_file)
         print(f"saved {dialog_file_path}")
@@ -42,10 +42,10 @@ if __name__ == "__main__":
     j_and_a_dialog_id = 331192040
 
     config = init_config(CONFIG_PATH)
-    client = init_client(session_name, config['api_id'], config['api_hash'])
+    client = init_tg_client(session_name, config['api_id'], config['api_hash'])
 
-    if not os.path.exists(config['meta_folder']):
-        os.mkdir(config['meta_folder'])
+    if not os.path.exists(config['dialogs_metadata_folder']):
+        os.mkdir(config['dialogs_metadata_folder'])
 
     # TODO: fix problem with msg, and meta_folder. They aren't variables now, they are in the config var
 
