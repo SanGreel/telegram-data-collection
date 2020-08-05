@@ -77,12 +77,11 @@ if __name__ == "__main__":
             # TODO: 3. fix downloading of users list, only exception branch works now
             try:
                 async for u in client.get_participants(d):
-                    save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
+                    print(dialog_id, name_of_dialog)
+                    # save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
             # TODO: 4. add proper exception (Andrew)
             except:
-
-                print('we are here')
                 save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
                 print(f'ChatAdminRequiredError for {name_of_dialog}')
