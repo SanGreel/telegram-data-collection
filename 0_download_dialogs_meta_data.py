@@ -1,38 +1,26 @@
-import json
 import argparse
 import os
 
-from utils import init_config, init_tg_client, save_dialog
+from utils.utils import init_config, init_tg_client, save_dialog
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Download dialogs meta data for account.')
+    parser = argparse.ArgumentParser(
+        description="Download dialogs meta data for account."
+    )
 
     parser.add_argument(
-        '--dialogs_limit',
-        type=int,
-        help='number of dialogs',
-        required=True
+        "--dialogs_limit", type=int, help="number of dialogs", required=True
     )
     parser.add_argument(
-        '--config_path',
+        "--config_path",
         type=str,
-        help='path to config file',
-        default='config/config.json'
+        help="path to config file",
+        default="config/config.json",
     )
-    parser.add_argument(
-        '--debug_mode',
-        type=int,
-        help='Debug mode',
-        default=0
-    )
-    parser.add_argument(
-        '--session_name',
-        type=str,
-        help='session name',
-        default='tmp'
-    )
+    parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
+    parser.add_argument("--session_name", type=str, help="session name", default="tmp")
 
     args = parser.parse_args()
 
@@ -44,10 +32,10 @@ if __name__ == "__main__":
     j_and_a_dialog_id = 331192040
 
     config = init_config(CONFIG_PATH)
-    client = init_tg_client(SESSION_NAME, config['api_id'], config['api_hash'])
+    client = init_tg_client(SESSION_NAME, config["api_id"], config["api_hash"])
 
-    if not os.path.exists(config['dialogs_metadata_folder']):
-        os.mkdir(config['dialogs_metadata_folder'])
+    if not os.path.exists(config["dialogs_metadata_folder"]):
+        os.mkdir(config["dialogs_metadata_folder"])
 
     # TODO: fix problem with msg, and meta_folder. They aren't variables now, they are in the config var
 
@@ -61,7 +49,7 @@ if __name__ == "__main__":
             # print(DIALOGS_LIMIT)
             if DIALOGS_LIMIT != -1 and k > DIALOGS_LIMIT:
                 exit(0)
-            print(f'step #{k}')
+            print(f"step #{k}")
 
             k += 1
 
@@ -72,9 +60,9 @@ if __name__ == "__main__":
             if d.is_user == True:
                 type_of_dialog = "Private dialog"
             elif d.is_group == True:
-                type_of_dialog = "Group type"
+                type_of_dialog = "Group"
             elif d.is_channel == True:
-                type_of_dialog = "Channel type"
+                type_of_dialog = "Channel"
 
             # TODO: 3. fix downloading of users list, only exception branch works now
             try:
@@ -82,14 +70,12 @@ if __name__ == "__main__":
                     print(dialog_id, name_of_dialog)
                     # save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
-            # TODO: 4. add proper exception (Andrew)
+            # TODO: 4. add proper exception
             except:
                 save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
-                print(f'ChatAdminRequiredError for {name_of_dialog}')
-                print('\n\n')
-
-
+                print(f"ChatAdminRequiredError for {name_of_dialog}")
+                print("\n\n")
 
     # # both arguments are empty
     # if SHOW_DIALOGS is None \
