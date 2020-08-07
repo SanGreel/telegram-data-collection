@@ -86,7 +86,7 @@ def make_config_client_access(config_path, session_name):
     return client
 
 
-if __name__ == "__save_user_dialogs__":
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Download dialogs meta data for account."
     )
