@@ -59,16 +59,14 @@ def make_config_client_access(config_path, session_name):
 
         # create config.json file
         while not api_id.isdigit() or not api_hash:
-            api_id = input("Input your api_id: ")
+            api_id = input("Input your api_id or 'q' to exit: ")
             if "q" == api_id:
                 break
-            api_hash = input("Input your api_hash: ")
+            api_hash = input("Input your api_hash or 'q' to exit: ")
             if "q" == api_hash:
                 break
 
-        with open(
-            os.path.join("config", "config_example.json"), "r", encoding="utf-8"
-        ) as json_file:
+        with open(os.path.join("config", "config_example.json"), "r", encoding="utf-8") as json_file:
             config = json.load(json_file)
 
         config["api_id"] = api_id
