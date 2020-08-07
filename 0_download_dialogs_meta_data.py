@@ -77,6 +77,9 @@ def make_config_client_access(config_path, session_name):
 
     client = TelegramClient(session_name, config["api_id"], config["api_hash"])
 
+    if not os.path.exists("data"):
+        os.mkdir("data")
+
     if not os.path.exists(config["dialogs_metadata_folder"]):
         os.mkdir(config["dialogs_metadata_folder"])
 
