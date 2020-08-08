@@ -11,7 +11,7 @@ def init_tool_config_arg():
     parser.add_argument(
         "--dialogs_ids",
         nargs="+",
-        type=int,
+        type=str,
         help="id(s) of dialog(s) to download, -1 for all",
         required=True,
     )
@@ -35,9 +35,8 @@ def init_tool_config_arg():
 if __name__ == "__main__":
 
     args = init_tool_config_arg()
-
     CONFIG_PATH = args.config_path
-    DIALOG_ID = args.dialogs_ids
+    DIALOG_ID = [int(arg.replace(",", "")) for arg in args.dialogs_ids]
     MSG_LIMIT = args.dialog_msg_limit
     SESSION_NAME = args.session_name
 
@@ -47,6 +46,7 @@ if __name__ == "__main__":
     client = init_tg_client(SESSION_NAME, config["api_id"], config["api_hash"])
 
     if DIALOG_ID[0] == -1:
+
         DIALOG_ID = []
         for d in dialogs_list:
             DIALOG_ID.append(d["id"])
@@ -60,7 +60,6 @@ if __name__ == "__main__":
 
         async def download_dialog():
 
-            # TODO: add handler for wrong IDs
             tg_entity = await client.get_entity(d)
             messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
 
