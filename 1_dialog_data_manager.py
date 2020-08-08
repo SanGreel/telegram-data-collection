@@ -6,6 +6,11 @@ from utils.utils import init_config, init_tg_client, read_dialogs
 
 
 def init_tool_config_arg():
+    """
+    Initialize arguments config
+
+    :return: argparse.Namespace
+    """
     parser = argparse.ArgumentParser(description="Step #2.Download dialogs")
 
     parser.add_argument(
@@ -46,12 +51,11 @@ if __name__ == "__main__":
     client = init_tg_client(SESSION_NAME, config["api_id"], config["api_hash"])
 
     if DIALOG_ID[0] == -1:
-
+        
         DIALOG_ID = []
         for d in dialogs_list:
             DIALOG_ID.append(d["id"])
 
-    # TODO: add a logic to download all msgs
     if MSG_LIMIT == -1:
         MSG_LIMIT = 100000000
 
@@ -59,10 +63,16 @@ if __name__ == "__main__":
         print(f"dialog #{d}")
 
         async def download_dialog():
+            """
+            Download messages and their metadata for a specific message id,
+            and save them in *ID*.csv
 
+            :return: None
+            """
             try:
                 tg_entity = await client.get_entity(d)
                 messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
+                print(type(messages[0]))
             except ValueError:
                 errmsg = f"No such ID found: #{d}"
                 raise ValueError(errmsg)
