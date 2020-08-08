@@ -2,7 +2,7 @@ import os
 import argparse
 import pandas as pd
 
-from utils.utils import init_config, init_tg_client, read_dialogs
+from utils.utils import init_config, init_tg_client, read_dialogs, prepare_msg
 
 
 def init_tool_config_arg():
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             # TODO: add handler for wrong IDs
             tg_entity = await client.get_entity(d)
             messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
-
+            print('downloaded')
             dialog = []
 
             for m in messages:
@@ -71,7 +71,7 @@ if __name__ == "__main__":
                     to_id = m.to_id.user_id
                 else:
                     to_id = m.to_id
-
+                msg = prepare_msg(m.message)
                 dialog.append(
                     {
                         "id": m.id,
@@ -79,7 +79,7 @@ if __name__ == "__main__":
                         "from_id": m.from_id,
                         "to_id": to_id,
                         "fwd_from": m.fwd_from,
-                        "message": m.message,
+                        "message": msg,
                     }
                 )
 
