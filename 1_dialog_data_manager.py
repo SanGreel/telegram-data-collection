@@ -60,9 +60,12 @@ if __name__ == "__main__":
 
         async def download_dialog():
 
-            tg_entity = await client.get_entity(d)
-            messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
-
+            try:
+                tg_entity = await client.get_entity(d)
+                messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
+            except ValueError:
+                errmsg = f"No such ID found: #{d}"
+                raise ValueError(errmsg)
             dialog = []
 
             for m in messages:
