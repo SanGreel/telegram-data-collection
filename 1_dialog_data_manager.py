@@ -37,7 +37,7 @@ def init_tool_config_arg():
     return parser.parse_args()
 
 
-async def download_dialog():
+async def download_dialog(client, dialog, msg_limit):
     """
     Download messages and their metadata for a specific message id,
     and save them in *ID*.csv
@@ -103,4 +103,4 @@ if __name__ == "__main__":
         print(f"dialog #{d}")
 
         with client:
-            client.loop.run_until_complete(download_dialog())
+            client.loop.run_until_complete(download_dialog(client, d, MSG_LIMIT))
