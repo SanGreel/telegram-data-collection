@@ -37,6 +37,46 @@ def init_tool_config_arg():
     return parser.parse_args()
 
 
+async def download_dialog():
+    """
+    Download messages and their metadata for a specific message id,
+    and save them in *ID*.csv
+
+    :return: None
+    """
+    try :
+        tg_entity = await client.get_entity(d)
+        messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
+    except ValueError :
+        errmsg = f"No such ID found: #{d}"
+        raise ValueError(errmsg)
+    dialog = []
+
+    for m in messages :
+        if hasattr(m.to_id, "user_id") :
+            to_id = m.to_id.user_id
+        else :
+            to_id = m.to_id
+
+        dialog.append(
+            {
+                "id" : m.id,
+                "date" : m.date,
+                "from_id" : m.from_id,
+                "to_id" : to_id,
+                "fwd_from" : m.fwd_from,
+                "message" : m.message,
+            }
+        )
+
+    dialog_file_path = os.path.join(
+        config["dialogs_data_folder"], f"{str(d)}.csv"
+    )
+
+    df = pd.DataFrame(dialog)
+    df.to_csv(dialog_file_path)
+
+
 if __name__ == "__main__":
 
     args = init_tool_config_arg()
@@ -61,46 +101,6 @@ if __name__ == "__main__":
 
     for d in DIALOG_ID:
         print(f"dialog #{d}")
-
-        async def download_dialog():
-            """
-            Download messages and their metadata for a specific message id,
-            and save them in *ID*.csv
-
-            :return: None
-            """
-            try:
-                tg_entity = await client.get_entity(d)
-                messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
-                print(type(messages[0]))
-            except ValueError:
-                errmsg = f"No such ID found: #{d}"
-                raise ValueError(errmsg)
-            dialog = []
-
-            for m in messages:
-                if hasattr(m.to_id, "user_id"):
-                    to_id = m.to_id.user_id
-                else:
-                    to_id = m.to_id
-
-                dialog.append(
-                    {
-                        "id": m.id,
-                        "date": m.date,
-                        "from_id": m.from_id,
-                        "to_id": to_id,
-                        "fwd_from": m.fwd_from,
-                        "message": m.message,
-                    }
-                )
-
-            dialog_file_path = os.path.join(
-                config["dialogs_data_folder"], f"{str(d)}.csv"
-            )
-
-            df = pd.DataFrame(dialog)
-            df.to_csv(dialog_file_path)
 
         with client:
             client.loop.run_until_complete(download_dialog())
