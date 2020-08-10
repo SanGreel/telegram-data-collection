@@ -2,6 +2,7 @@ import os
 import json
 import re
 from word2number import w2n
+import logging
 from glob import glob
 
 from telethon import TelegramClient, events, sync, errors
@@ -67,7 +68,7 @@ def prepare_msg(msg: str):
             try:
                 word = str(w2n.word_to_num(word))
             except ValueError:
-                pass
+                logging.debug('Cannot convert word to number (probably not a number)')
             word = re.sub(symb_pattern, ' ', word)
         out_msg.append(word)
     out_msg = re.sub(r'\s\s+', ' ', ' '.join(out_msg))
