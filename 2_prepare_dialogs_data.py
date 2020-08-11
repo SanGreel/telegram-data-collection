@@ -82,7 +82,7 @@ def clean_message(msg: str) -> str:
     return re.sub(r'\s\s+', ' ', ' '.join(out_msg))
 
 
-def prepare_dialog(dialog_id: str, dialog_path: str, prep_path: str) -> None:
+def prepare_dialogs(dialog_id: str, dialog_path: str, prep_path: str) -> None:
     """
     Reads raw csv data and creates prepared copy
     at /data/prepared_dialogs/
@@ -115,6 +115,6 @@ if __name__ == "__main__":
             os.mkdir(PREPARED_PATH)
 
         for dialog in DIALOG_ID:
-            prepare_dialog(dialog, DIALOG_PATH, PREPARED_PATH)
+            prepare_dialogs(dialog, DIALOG_PATH, PREPARED_PATH)
     else:
         logging.error('Dialogs dir does not exist !')
