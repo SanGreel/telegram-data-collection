@@ -1,5 +1,8 @@
 import os
 import json
+import re
+from word2number import w2n
+import logging
 from glob import glob
 
 from telethon import TelegramClient, events, sync, errors
@@ -17,7 +20,6 @@ def init_tg_client(session_name, api_id, api_hash):
 
 
 def read_dialogs(metadata_folder="data/dialogs_meta/", metadata_format="json"):
-
     if os.path.isdir(metadata_folder):
         dialogs_list = []
 
@@ -46,3 +48,5 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
         json.dump(metadata, meta_file)
         print(f"saved {dialog_file_path}")
         print("\n")
+
+

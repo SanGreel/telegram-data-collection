@@ -1,7 +1,7 @@
 import os
 import argparse
 import pandas as pd
-
+import logging
 from utils.utils import init_config, init_tg_client, read_dialogs
 
 
@@ -27,6 +27,7 @@ def init_tool_config_arg():
         help="path to config file",
         default="config/config.json",
     )
+    parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
     parser.add_argument("--session_name", type=str, help="session name", default="tmp")
 
     return parser.parse_args()
@@ -40,6 +41,7 @@ if __name__ == "__main__":
     DIALOG_ID = args.dialogs_ids
     MSG_LIMIT = args.dialog_msg_limit
     SESSION_NAME = args.session_name
+    DEBUG_MODE = args.debug_mode
 
     config = init_config(CONFIG_PATH)
     dialogs_list = read_dialogs(config["dialogs_metadata_folder"])
@@ -55,15 +57,19 @@ if __name__ == "__main__":
     if MSG_LIMIT == -1:
         MSG_LIMIT = 100000000
 
+    if DEBUG_MODE:
+        logging.basicConfig(level=logging.DEBUG)
+
     for d in DIALOG_ID:
         print(f"dialog #{d}")
+
 
         async def download_dialog():
 
             # TODO: add handler for wrong IDs
             tg_entity = await client.get_entity(d)
             messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
-
+            logging.debug('Dialogs were downloaded.')
             dialog = []
 
             for m in messages:
@@ -89,6 +95,7 @@ if __name__ == "__main__":
 
             df = pd.DataFrame(dialog)
             df.to_csv(dialog_file_path)
+
 
         with client:
             client.loop.run_until_complete(download_dialog())
