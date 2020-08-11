@@ -44,48 +44,14 @@ async def save_user_dialogs(client, dialogs_limit):
 
             save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
-        except TypeError:
-            print("ERROR!!!!! with getting participants of the dialog")
-            save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
-
         except telethon.errors.rpcerrorlist.ChatAdminRequiredError as error:
             print("ERROR!!!!! ", error)
             save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog)
 
 
-def make_config_client_access(config_path, session_name):
-    if not os.path.exists(config_path):
-        api_id, api_hash = "", ""
-
-        # create config.json file
-        while not api_id.isdigit() or not api_hash:
-            api_id = input("Input your api_id or 'q' to exit: ")
-            if "q" == api_id:
-                break
-            api_hash = input("Input your api_hash or 'q' to exit: ")
-            if "q" == api_hash:
-                break
-
-        with open(os.path.join("config", "config_example.json"), "r", encoding="utf-8") as json_file:
-            config = json.load(json_file)
-
-        config["api_id"] = api_id
-        config["api_hash"] = api_hash
-
-    else:
-        config = init_config(config_path)
-
+def get_client_access(config_path, session_name):
+    config = init_config(config_path)
     client = TelegramClient(session_name, config["api_id"], config["api_hash"])
-
-    if not os.path.exists("data"):
-        os.mkdir("data")
-
-    if not os.path.exists(config["dialogs_metadata_folder"]):
-        os.mkdir(config["dialogs_metadata_folder"])
-
-    with open(config_path, "w", encoding="utf-8") as json_file:
-        json.dump(config, json_file, indent=4, ensure_ascii=True)
-
     return client
 
 
@@ -114,7 +80,7 @@ if __name__ == "__main__":
     DIALOGS_LIMIT = args.dialogs_limit
     SESSION_NAME = args.session_name
 
-    # start saving dialogs of the special user
-    client = make_config_client_access(CONFIG_PATH, SESSION_NAME)
+    # save user dialoges
+    client = get_client_access(CONFIG_PATH, SESSION_NAME)
     with client:
         client.loop.run_until_complete(save_user_dialogs(client, DIALOGS_LIMIT))
