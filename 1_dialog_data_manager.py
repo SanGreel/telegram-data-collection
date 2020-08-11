@@ -77,7 +77,7 @@ if __name__ == "__main__":
                     to_id = m.to_id.user_id
                 else:
                     to_id = m.to_id
-                msg = prepare_msg(m.message)
+
                 dialog.append(
                     {
                         "id": m.id,
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                         "from_id": m.from_id,
                         "to_id": to_id,
                         "fwd_from": m.fwd_from,
-                        "message": msg,
+                        "message": m.message,
                     }
                 )
 
