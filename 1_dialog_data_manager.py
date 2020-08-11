@@ -2,7 +2,7 @@ import os
 import argparse
 import pandas as pd
 import logging
-from utils.utils import init_config, init_tg_client, read_dialogs, prepare_msg
+from utils.utils import init_config, init_tg_client, read_dialogs
 
 
 def init_tool_config_arg():

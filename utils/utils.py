@@ -50,26 +50,3 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
         print("\n")
 
 
-def prepare_msg(msg: str):
-    """
-    Deletes symbols, converts words to numbers, prepares urls.
-    :param msg: str
-    :return: str
-    """
-    url_extract = re.compile(r'(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)?(?:https?:\/\/)'
-                             r'(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)(?:[-a-zA-Z0'
-                             r'-9@:%_\+.~#?&//=]*)?')
-    symb_pattern = re.compile(r"[-!$%^&*()_+|~=`{}\[\]:';<>?,ʼ\/]|[^\w]")
-    out_msg = []
-    for word in str(msg).split():
-        if url_extract.findall(word):
-            word = url_extract.findall(word)[0]
-        else:
-            try:
-                word = str(w2n.word_to_num(word))
-            except ValueError:
-                logging.debug('Cannot convert word to number (probably not a number)')
-            word = re.sub(symb_pattern, ' ', word)
-        out_msg.append(word)
-    out_msg = re.sub(r'\s\s+', ' ', ' '.join(out_msg))
-    return out_msg
