@@ -1,8 +1,5 @@
 import os
 import json
-import re
-from word2number import w2n
-import logging
 from glob import glob
 
 from telethon import TelegramClient, events, sync, errors
