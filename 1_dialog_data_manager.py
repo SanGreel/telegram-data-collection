@@ -8,7 +8,7 @@ from utils.utils import init_config, read_dialogs
 
 def init_args():
     """
-    Initialize arguments for terminal
+    Initialize arguments
 
     :return: argparse.Namespace
     """
@@ -108,6 +108,7 @@ async def download_dialog(client, d, MSG_LIMIT):
 if __name__ == "__main__":
 
     args = init_args()
+
     CONFIG_PATH = args.config_path
     MSG_LIMIT = msg_limit_input_handler(args.dialog_msg_limit)
     SESSION_NAME = args.session_name
