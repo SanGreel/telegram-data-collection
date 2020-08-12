@@ -2,22 +2,43 @@ import os
 import json
 from glob import glob
 
-from telethon import TelegramClient, events, sync, errors
-
 
 def init_config(config_path):
-    with open(config_path) as json_file:
-        config = json.load(json_file)
-        return config
-    return None
+    if not os.path.exists(config_path):
+        api_id, api_hash = "", ""
 
+        # create config.json file
+        while not api_id.isdigit() or not api_hash:
+            api_id = input("Input your api_id or 'q' to exit: ")
+            if "q" == api_id:
+                break
+            api_hash = input("Input your api_hash or 'q' to exit: ")
+            if "q" == api_hash:
+                break
 
-def init_tg_client(session_name, api_id, api_hash):
-    return TelegramClient(session_name, api_id, api_hash)
+        with open(os.path.join("config", "config.json"), "r", encoding="utf-8") as json_file:
+            config = json.load(json_file)
+
+        config["api_id"] = api_id
+        config["api_hash"] = api_hash
+
+    else:
+        with open(config_path) as json_file:
+            config = json.load(json_file)
+
+    if not os.path.exists("data"):
+        os.mkdir("data")
+
+    if not os.path.exists(config["dialogs_metadata_folder"]):
+        os.mkdir(config["dialogs_metadata_folder"])
+
+    with open(config_path, "w", encoding="utf-8") as json_file:
+        json.dump(config, json_file, indent=4, ensure_ascii=True)
+
+    return config
 
 
 def read_dialogs(metadata_folder="data/dialogs_meta/", metadata_format="json"):
-
     if os.path.isdir(metadata_folder):
         dialogs_list = []
 
@@ -33,16 +54,17 @@ def read_dialogs(metadata_folder="data/dialogs_meta/", metadata_format="json"):
 
 
 def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
-    # TODO: 2. fix encoding problem
     metadata = {
         "id": dialog_id,
         "name": name_of_dialog,
-        "users": users_names,
         "type": type_of_dialog,
+        "users": users_names
     }
 
     dialog_file_path = "data/dialogs_meta/" + str(dialog_id) + ".json"
-    with open(dialog_file_path, "w+", encoding="utf8") as meta_file:
-        json.dump(metadata, meta_file)
+    with open(dialog_file_path, "w", encoding="utf8") as meta_file:
+        json.dump(metadata, meta_file, indent=4, ensure_ascii=False)
         print(f"saved {dialog_file_path}")
         print("\n")
+
+
