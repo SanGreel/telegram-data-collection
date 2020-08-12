@@ -3,7 +3,7 @@ Combination of tools to download your telegram data.
 
 
 ### Structure
-##### 0_download_dialogs_meta_data.py
+##### 0_download_dialogs_list.py
 Download dialogs meta data for account.
 
 `--dialogs_limit`
