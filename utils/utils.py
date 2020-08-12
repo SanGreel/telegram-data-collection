@@ -29,8 +29,8 @@ def init_config(config_path):
     if not os.path.exists("data"):
         os.mkdir("data")
 
-    if not os.path.exists(config["dialogs_metadata_folder"]):
-        os.mkdir(config["dialogs_metadata_folder"])
+    if not os.path.exists(config["dialogs_list_folder"]):
+        os.mkdir(config["dialogs_list_folder"])
 
     with open(config_path, "w", encoding="utf-8") as json_file:
         json.dump(config, json_file, indent=4, ensure_ascii=True)
@@ -53,7 +53,8 @@ def read_dialogs(metadata_folder="data/dialogs_meta/", metadata_format="json"):
     return None
 
 
-def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
+def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog, dialogs_list_folder="data/dialogs_list"):
+
     metadata = {
         "id": dialog_id,
         "name": name_of_dialog,
@@ -61,7 +62,8 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog):
         "users": users_names
     }
 
-    dialog_file_path = "data/dialogs_meta/" + str(dialog_id) + ".json"
+    dialog_file_path = os.path.join(dialogs_list_folder, str(dialog_id) + ".json")
+
     with open(dialog_file_path, "w", encoding="utf8") as meta_file:
         json.dump(metadata, meta_file, indent=4, ensure_ascii=False)
         print(f"saved {dialog_file_path}")

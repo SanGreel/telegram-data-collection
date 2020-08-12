@@ -2,5 +2,5 @@
   "api_id": "",
   "api_hash": "",
   "dialogs_data_folder": "data/dialogs",
-  "dialogs_metadata_folder": "data/dialogs_meta"
+  "dialogs_list_folder": "data/dialogs_meta"
 }

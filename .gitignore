@@ -1,7 +1,8 @@
-data/dialogs/*
-data/dialogs_meta/*
+data/*
 
 tmp.session
+tmp.session-journal
+
 config/config.json
 
 .idea/

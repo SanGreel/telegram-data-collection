@@ -2,13 +2,15 @@ import os
 import argparse
 import pandas as pd
 import logging
+
 import telethon
+
 from utils.utils import init_config, read_dialogs
 
 
 def init_args():
     """
-    Initialize arguments for terminal
+    Initialize arguments
 
     :return: argparse.Namespace
     """
@@ -39,7 +41,7 @@ def init_args():
     return parser.parse_args()
 
 
-def dialog_id_input_handler(input_id_lst, dialog_list="data/dialogs"):
+def dialogs_id_input_handler(input_id_lst, dialog_list="data/dialogs"):
     """
     Functions handles input_id_lst depending on the input
 
@@ -67,7 +69,7 @@ def msg_limit_input_handler(msg_limit):
     return msg_limit
 
 
-async def download_dialog(client, d, MSG_LIMIT):
+async def download_dialog(client, id, MSG_LIMIT):
     """
     Download messages and their metadata for a specific message id,
     and save them in *ID*.csv
@@ -75,11 +77,12 @@ async def download_dialog(client, d, MSG_LIMIT):
     :return: None
     """
     try:
-        tg_entity = await client.get_entity(d)
+        tg_entity = await client.get_entity(id)
         messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
     except ValueError:
-        errmsg = f"No such ID found: #{d}"
+        errmsg = f"No such ID found: #{id}"
         raise ValueError(errmsg,)
+
     dialog = []
 
     for m in messages:
@@ -99,7 +102,7 @@ async def download_dialog(client, d, MSG_LIMIT):
             }
         )
 
-    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(d)}.csv")
+    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
 
     df = pd.DataFrame(dialog)
     df.to_csv(dialog_file_path)
@@ -108,22 +111,26 @@ async def download_dialog(client, d, MSG_LIMIT):
 if __name__ == "__main__":
 
     args = init_args()
+
     CONFIG_PATH = args.config_path
     MSG_LIMIT = msg_limit_input_handler(args.dialog_msg_limit)
     SESSION_NAME = args.session_name
     DEBUG_MODE = args.debug_mode
 
     config = init_config(CONFIG_PATH)
-    dialogs_list = read_dialogs(config["dialogs_metadata_folder"])
+    dialogs_list = read_dialogs(config["dialogs_list_folder"])
     client = telethon.TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"])
 
-    DIALOGS_ID = dialog_id_input_handler(args.dialogs_ids, dialogs_list)
+    DIALOGS_ID = dialogs_id_input_handler(args.dialogs_ids, dialogs_list)
 
     if DEBUG_MODE:
         logging.basicConfig(level=logging.DEBUG)
 
-    for d in DIALOGS_ID:
-        print(f"Loading dialog #{d}")
+    if not os.path.exists(config["dialogs_data_folder"]):
+        os.mkdir(config["dialogs_data_folder"])
+
+    for id in DIALOGS_ID:
+        print(f"Loading dialog #{id}")
 
         with client:
-            client.loop.run_until_complete(download_dialog(client, d, MSG_LIMIT))
+            client.loop.run_until_complete(download_dialog(client, id, MSG_LIMIT))
