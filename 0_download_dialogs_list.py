@@ -73,6 +73,7 @@ async def save_dialogs(client, dialogs_limit):
             print("ERROR\n", error)
             save_dialog(dialog_id, dialog_name, dialog_members, dialog_type)
 
+
 if __name__ == "__main__":
     args = init_args()
 

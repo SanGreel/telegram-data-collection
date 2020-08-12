@@ -1,6 +1,8 @@
 data/*
 
 tmp.session
+tmp.session-journal
+
 config/config.json
 
 .idea/
