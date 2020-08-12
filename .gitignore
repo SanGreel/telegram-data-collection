@@ -1,5 +1,4 @@
-data/dialogs/*
-data/dialogs_meta/*
+data/*
 
 tmp.session
 config/config.json
