@@ -1,8 +1,9 @@
 import os
 import argparse
 import pandas as pd
-
-from utils.utils import init_config, init_tg_client, read_dialogs
+import logging
+import telethon
+from utils.utils import init_config, read_dialogs
 
 
 def init_args():
@@ -32,6 +33,7 @@ def init_args():
         help="path to config file",
         default="config/config.json",
     )
+    parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
     parser.add_argument("--session_name", type=str, help="session name", default="tmp")
 
     return parser.parse_args()
@@ -109,12 +111,16 @@ if __name__ == "__main__":
     CONFIG_PATH = args.config_path
     MSG_LIMIT = msg_limit_input_handler(args.dialog_msg_limit)
     SESSION_NAME = args.session_name
+    DEBUG_MODE = args.debug_mode
 
     config = init_config(CONFIG_PATH)
     dialogs_list = read_dialogs(config["dialogs_metadata_folder"])
-    client = init_tg_client(SESSION_NAME, config["api_id"], config["api_hash"])
+    client = telethon.TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"])
 
     DIALOGS_ID = dialog_id_input_handler(args.dialogs_ids, dialogs_list)
+
+    if DEBUG_MODE:
+        logging.basicConfig(level=logging.DEBUG)
 
     for d in DIALOGS_ID:
         print(f"Loading dialog #{d}")
