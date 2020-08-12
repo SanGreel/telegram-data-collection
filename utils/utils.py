@@ -1,8 +1,5 @@
 import os
 import json
-import re
-from word2number import w2n
-import logging
 from glob import glob
 
 
@@ -19,7 +16,7 @@ def init_config(config_path):
             if "q" == api_hash:
                 break
 
-        with open(os.path.join("config", "config_example.json"), "r", encoding="utf-8") as json_file:
+        with open(os.path.join("config", "config.json"), "r", encoding="utf-8") as json_file:
             config = json.load(json_file)
 
         config["api_id"] = api_id

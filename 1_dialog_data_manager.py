@@ -2,16 +2,22 @@ import os
 import argparse
 import pandas as pd
 import logging
-from utils.utils import init_config, init_tg_client, read_dialogs
+import telethon
+from utils.utils import init_config, read_dialogs
 
 
-def init_tool_config_arg():
+def init_args():
+    """
+    Initialize arguments for terminal
+
+    :return: argparse.Namespace
+    """
     parser = argparse.ArgumentParser(description="Step #2.Download dialogs")
 
     parser.add_argument(
         "--dialogs_ids",
         nargs="+",
-        type=int,
+        type=str,
         help="id(s) of dialog(s) to download, -1 for all",
         required=True,
     )
@@ -33,69 +39,91 @@ def init_tool_config_arg():
     return parser.parse_args()
 
 
+def dialog_id_input_handler(input_id_lst, dialog_list="data/dialogs"):
+    """
+    Functions handles input_id_lst depending on the input
+
+    :param input_id_lst: list of all dialogs from command prompt
+    :param dialog_list: list of all dialogs in meta directory
+    :return:
+    """
+    if input_id_lst[0] == "-1":
+        return [dialog_id["id"] for dialog_id in dialog_list]
+    elif len(input_id_lst) == 1:
+        return [int(dialog_id) for dialog_id in input_id_lst[0].split(",")]
+    elif len(input_id_lst) > 1:
+        return [int(dialog_id.replace(",", "")) for dialog_id in input_id_lst]
+
+
+def msg_limit_input_handler(msg_limit):
+    """
+    Functions handles msg_limit depending on the input
+
+    :param msg_limit: maximum amount of messages to be
+                      downloaded for each dialog
+    :return: msg_limit
+    """
+    msg_limit = 100000000 if msg_limit == -1 else msg_limit
+    return msg_limit
+
+
+async def download_dialog(client, d, MSG_LIMIT):
+    """
+    Download messages and their metadata for a specific message id,
+    and save them in *ID*.csv
+
+    :return: None
+    """
+    try:
+        tg_entity = await client.get_entity(d)
+        messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
+    except ValueError:
+        errmsg = f"No such ID found: #{d}"
+        raise ValueError(errmsg,)
+    dialog = []
+
+    for m in messages:
+        if hasattr(m.to_id, "user_id"):
+            to_id = m.to_id.user_id
+        else:
+            to_id = m.to_id
+
+        dialog.append(
+            {
+                "id": m.id,
+                "date": m.date,
+                "from_id": m.from_id,
+                "to_id": to_id,
+                "fwd_from": m.fwd_from,
+                "message": m.message,
+            }
+        )
+
+    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(d)}.csv")
+
+    df = pd.DataFrame(dialog)
+    df.to_csv(dialog_file_path)
+
+
 if __name__ == "__main__":
 
-    args = init_tool_config_arg()
-
+    args = init_args()
     CONFIG_PATH = args.config_path
-    DIALOG_ID = args.dialogs_ids
-    MSG_LIMIT = args.dialog_msg_limit
+    MSG_LIMIT = msg_limit_input_handler(args.dialog_msg_limit)
     SESSION_NAME = args.session_name
     DEBUG_MODE = args.debug_mode
 
     config = init_config(CONFIG_PATH)
     dialogs_list = read_dialogs(config["dialogs_metadata_folder"])
+    client = telethon.TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"])
 
-    client = init_tg_client(SESSION_NAME, config["api_id"], config["api_hash"])
-
-    if DIALOG_ID[0] == -1:
-        DIALOG_ID = []
-        for d in dialogs_list:
-            DIALOG_ID.append(d["id"])
-
-    # TODO: add a logic to download all msgs
-    if MSG_LIMIT == -1:
-        MSG_LIMIT = 100000000
+    DIALOGS_ID = dialog_id_input_handler(args.dialogs_ids, dialogs_list)
 
     if DEBUG_MODE:
         logging.basicConfig(level=logging.DEBUG)
 
-    for d in DIALOG_ID:
-        print(f"dialog #{d}")
-
-
-        async def download_dialog():
-
-            # TODO: add handler for wrong IDs
-            tg_entity = await client.get_entity(d)
-            messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
-            logging.debug('Dialogs were downloaded.')
-            dialog = []
-
-            for m in messages:
-                if hasattr(m.to_id, "user_id"):
-                    to_id = m.to_id.user_id
-                else:
-                    to_id = m.to_id
-
-                dialog.append(
-                    {
-                        "id": m.id,
-                        "date": m.date,
-                        "from_id": m.from_id,
-                        "to_id": to_id,
-                        "fwd_from": m.fwd_from,
-                        "message": m.message,
-                    }
-                )
-
-            dialog_file_path = os.path.join(
-                config["dialogs_data_folder"], f"{str(d)}.csv"
-            )
-
-            df = pd.DataFrame(dialog)
-            df.to_csv(dialog_file_path)
-
+    for d in DIALOGS_ID:
+        print(f"Loading dialog #{d}")
 
         with client:
-            client.loop.run_until_complete(download_dialog())
+            client.loop.run_until_complete(download_dialog(client, d, MSG_LIMIT))
