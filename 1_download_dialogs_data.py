@@ -78,6 +78,8 @@ async def download_dialog(client, id, MSG_LIMIT):
     """
     try:
         tg_entity = await client.get_entity(id)
+        # path = await client.download_media(id)
+        # print(path)
         messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
     except ValueError:
         errmsg = f"No such ID found: #{id}"
@@ -86,6 +88,9 @@ async def download_dialog(client, id, MSG_LIMIT):
     dialog = []
 
     for m in messages:
+        if m.media:
+            #path = await m.download_media(file="data/media/")
+            print(type(m.media))
         if hasattr(m.to_id, "user_id"):
             to_id = m.to_id.user_id
         else:
