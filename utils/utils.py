@@ -38,7 +38,7 @@ def init_config(config_path):
     return config
 
 
-def read_dialogs(metadata_folder="data/dialogs_meta/", metadata_format="json"):
+def read_dialogs(metadata_folder, metadata_format="json"):
     if os.path.isdir(metadata_folder):
         dialogs_list = []
 
@@ -68,5 +68,3 @@ def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog, dialogs_
         json.dump(metadata, meta_file, indent=4, ensure_ascii=False)
         print(f"saved {dialog_file_path}")
         print("\n")
-
-

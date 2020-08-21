@@ -40,11 +40,12 @@ async def save_dialogs(client, dialogs_limit):
     for n_dialog, dialog in enumerate(dialogs):
         if dialogs_limit == n_dialog:
             exit(0)
-        print(f"step #{n_dialog + 1}")
-
+            
         dialog_id = dialog.id
         dialog_name = dialog.name
         dialog_members = []
+
+        print(f"dialog #{dialog_id}")
 
         dialog_type = ""
         if dialog.is_user:
