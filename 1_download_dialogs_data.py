@@ -69,6 +69,50 @@ def msg_limit_input_handler(msg_limit):
     return msg_limit
 
 
+def msg_handler(msg):
+    """
+    Handles attributes of a specific message, depending if
+    it is text, photo, voice, video or sticker
+
+    :param msg: message
+    :return: dict of attributes
+    """
+    msg_attributes = {
+        "message": msg.message,
+        "type": "text",
+        "duration": "",
+        "to_id": "",
+    }
+
+    if hasattr(msg.to_id, "user_id"):
+        msg_attributes["to_id"] = msg.to_id.user_id
+    else:
+        msg_attributes["to_id"] = msg.to_id
+
+    if msg.sticker:
+        for attribute in msg.sticker.attributes:
+            if isinstance(attribute, telethon.tl.types.DocumentAttributeSticker):
+                msg_attributes["message"] = attribute.alt
+                msg_attributes["type"] = "sticker"
+
+    elif msg.video:
+        for attribute in msg.video.attributes:
+            if isinstance(attribute, telethon.tl.types.DocumentAttributeVideo):
+                msg_attributes["duration"] = attribute.duration
+                msg_attributes["type"] = "video"
+
+    elif msg.voice:
+        for attribute in msg.voice.attributes:
+            if isinstance(attribute, telethon.tl.types.DocumentAttributeAudio):
+                msg_attributes["duration"] = attribute.duration
+                msg_attributes["type"] = "voice"
+
+    elif msg.photo:
+        msg_attributes["type"] = "photo"
+
+    return msg_attributes
+
+
 async def download_dialog(client, id, MSG_LIMIT):
     """
     Download messages and their metadata for a specific message id,
@@ -86,19 +130,19 @@ async def download_dialog(client, id, MSG_LIMIT):
     dialog = []
 
     for m in messages:
-        if hasattr(m.to_id, "user_id"):
-            to_id = m.to_id.user_id
-        else:
-            to_id = m.to_id
+
+        msg_attrs = msg_handler(m)
 
         dialog.append(
             {
                 "id": m.id,
                 "date": m.date,
                 "from_id": m.from_id,
-                "to_id": to_id,
+                "to_id": msg_attrs["to_id"],
                 "fwd_from": m.fwd_from,
-                "message": m.message,
+                "message": msg_attrs["message"],
+                "type": msg_attrs["type"],
+                "duration": msg_attrs["duration"],
             }
         )
 
