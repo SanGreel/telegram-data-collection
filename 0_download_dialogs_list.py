@@ -71,7 +71,7 @@ async def save_dialogs(client, dialogs_limit):
         except telethon.errors.rpcerrorlist.ChatAdminRequiredError as error:
             print("ERROR\n", error)
 
-    save_dialog(dialog_id, dialog_name, dialog_members, dialog_type, DIALOGS_LIST_FOLDER)
+        save_dialog(dialog_id, dialog_name, dialog_members, dialog_type, DIALOGS_LIST_FOLDER)
 
 
 if __name__ == "__main__":

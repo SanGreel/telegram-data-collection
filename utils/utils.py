@@ -26,8 +26,8 @@ def init_config(config_path):
         with open(config_path) as json_file:
             config = json.load(json_file)
 
-    if not os.path.exists("data"):
-        os.mkdir("data")
+    if not os.path.exists(config["data_folder"]):
+        os.mkdir(config["data_folder"])
 
     if not os.path.exists(config["dialogs_list_folder"]):
         os.mkdir(config["dialogs_list_folder"])
