@@ -45,7 +45,7 @@ def read_dialogs(metadata_folder, metadata_format="json"):
         files = glob(f"{metadata_folder}/*.{metadata_format}")
 
         for dialog_path in files:
-            with open(dialog_path, "r") as read_file:
+            with open(dialog_path, "r", encoding="utf-8") as read_file:
                 dialogs_data = json.load(read_file)
                 dialogs_list.append(dialogs_data)
 
@@ -54,7 +54,6 @@ def read_dialogs(metadata_folder, metadata_format="json"):
 
 
 def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog, dialogs_list_folder="data/dialogs_list"):
-
     metadata = {
         "id": dialog_id,
         "name": name_of_dialog,

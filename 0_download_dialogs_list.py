@@ -40,7 +40,7 @@ async def save_dialogs(client, dialogs_limit):
     for n_dialog, dialog in enumerate(dialogs):
         if dialogs_limit == n_dialog:
             exit(0)
-            
+
         dialog_id = dialog.id
         dialog_name = dialog.name
         dialog_members = []
@@ -61,6 +61,7 @@ async def save_dialogs(client, dialogs_limit):
             for user in users:
                 if user.username is not None:
                     user_data = {
+                        "user_id": user.id,
                         "first_name": user.first_name,
                         "last_name": user.last_name,
                         "username": user.username,
