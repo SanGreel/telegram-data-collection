@@ -1,4 +1,4 @@
-# Telegram insights v0.01
+# Telegram data collector v0.01
 Combination of tools to download your telegram data.
 
 
