@@ -5,26 +5,30 @@ from glob import glob
 
 def init_config(config_path):
     if not os.path.exists(config_path):
-        api_id, api_hash = "", ""
-
-        # create config.json file
-        while not api_id.isdigit() or not api_hash:
-            api_id = input("Input your api_id or 'q' to exit: ")
-            if "q" == api_id:
-                break
-            api_hash = input("Input your api_hash or 'q' to exit: ")
-            if "q" == api_hash:
-                break
-
-        with open(os.path.join("config", "config.json"), "r", encoding="utf-8") as json_file:
-            config = json.load(json_file)
-
-        config["api_id"] = api_id
-        config["api_hash"] = api_hash
+        raise Exception("Config file doesn't exist\n"
+                        f"Please, create a new config file here {config_path}")
+        # api_id, api_hash = "", ""
+        # config = {}
+        #
+        # # create config.json file
+        # while not api_id.isdigit() or not api_hash:
+        #     api_id = input("Input your api_id or 'q' to exit: ")
+        #     if "q" == api_id:
+        #         break
+        #     api_hash = input("Input your api_hash or 'q' to exit: ")
+        #     if "q" == api_hash:
+        #         break
+        #
+        # config["api_id"] = api_id
+        # config["api_hash"] = api_hash
 
     else:
         with open(config_path) as json_file:
             config = json.load(json_file)
+
+    default_data_folder = "../data"
+    if config["dialogs_data_folder"].startswith(default_data_folder) and not os.path.exists(default_data_folder):
+        os.mkdir(default_data_folder)
 
     if not os.path.exists(config["dialogs_data_folder"]):
         os.mkdir(config["dialogs_data_folder"])

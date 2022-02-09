@@ -38,6 +38,7 @@ async def save_dialogs(client, dialogs_limit):
 
     # Getting id for each dialog in the list of dialogs
     for n_dialog, dialog in enumerate(dialogs):
+        print(vars(dialog))
         if dialogs_limit == n_dialog:
             exit(0)
 
