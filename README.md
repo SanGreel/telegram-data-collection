@@ -1,4 +1,4 @@
-# Telegram insights v0.01
+# Telegram data collector v0.01
 Combination of tools to download your telegram data.
 
 
@@ -20,5 +20,7 @@ Debug mode
 
 
 ### How to run
-0. get your credentials https://my.telegram.org/apps
-1. set credentials (api_id, api_hash) in *config/config.json* (can be based on the *config_example.json*)
+0. install dependencies 
+```pip install -r requirements.txt```
+1. get your credentials https://my.telegram.org/apps
+2. set credentials (api_id, api_hash) in *config/config.json* (can be based on the *config_example.json*)
