@@ -38,7 +38,7 @@ async def save_dialogs(client, dialogs_limit):
 
     # Getting id for each dialog in the list of dialogs
     for n_dialog, dialog in enumerate(dialogs):
-        print(vars(dialog))
+        # print(vars(dialog))
         if dialogs_limit == n_dialog:
             exit(0)
 
@@ -70,7 +70,7 @@ async def save_dialogs(client, dialogs_limit):
                     }
                     dialog_members.append(user_data)
 
-        except telethon.errors.rpcerrorlist.ChatAdminRequiredError as error:
+        except BaseException as error:
             print("ERROR\n", error)
 
         save_dialog(dialog_id, dialog_name, dialog_members, dialog_type, DIALOGS_LIST_FOLDER)
