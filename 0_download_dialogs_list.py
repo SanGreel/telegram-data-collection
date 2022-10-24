@@ -26,7 +26,7 @@ def init_args():
         help="path to config file",
         default=os.path.join("config", "config.json"),
     )
-    parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
+    parser.add_argument("--debug_mode", type=int, help="debug mode", default=0)
     parser.add_argument("--session_name", type=str, help="session name", default="tmp")
 
     # read arguments from terminal

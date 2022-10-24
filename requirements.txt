@@ -1,2 +1,2 @@
-Telethon
-pandas
+Telethon==1.25.4
+pandas==1.5.1
