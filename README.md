@@ -19,8 +19,24 @@ path to config file
 Debug mode
 
 
+##### 1_download_dialogs_data.py
+Download all messages from the dialogs.
+
+
+### Requirements
+Python 3.8.13
+
+
 ### How to run
-0. install dependencies 
+0. create virtual env
+```python -m venv .venv```
+1. activate virtual env
+```. .venv/bin/activate```
+2. install dependencies 
 ```pip install -r requirements.txt```
-1. get your credentials https://my.telegram.org/apps
-2. set credentials (api_id, api_hash) in *config/config.json* (can be based on the *config_example.json*)
+3. get your credentials https://my.telegram.org/apps
+4. set credentials (api_id, api_hash) in *config/config.json* (can be based on the *config_example.json*)
+
+### How to start
+0. ```python 0_download_dialogs_list.py --dialogs_limit -1```
+1. ```python 1_download_dialogs_data.py --dialogs_ids -1 --dialog_msg_limit -1```

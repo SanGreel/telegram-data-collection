@@ -28,7 +28,7 @@ def init_args():
         "--dialog_msg_limit",
         type=int,
         help="amount of messages to download from a dialog, -1 for all",
-        default=100,
+        default=10000,
     )
     parser.add_argument(
         "--config_path",
