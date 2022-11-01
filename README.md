@@ -22,6 +22,8 @@ Debug mode
 ##### 1_download_dialogs_data.py
 Download all messages from the dialogs.
 
+Use flags `--skip_private`, `--skip_groups`, and `--skip_channels`
+to skip private chats, groups, and channels respectively.
 
 ### Requirements
 Python 3.8.13

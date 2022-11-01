@@ -42,24 +42,33 @@ def init_args():
     )
     parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
     parser.add_argument("--session_name", type=str, help="session name", default="tmp")
+    parser.add_argument('--skip_private', action='store_true')
+    parser.add_argument('--skip_groups', action='store_true')
+    parser.add_argument('--skip_channels', action='store_true')
 
     return parser.parse_args()
 
 
-def dialogs_id_input_handler(input_id_lst, dialog_list="data/dialogs"):
+def dialogs_id_input_handler(input_id_lst, is_dialog_type_accepted, dialog_list="data/dialogs"):
     """
     Functions handles input_id_lst depending on the input
 
     :param input_id_lst: list of all dialogs from command prompt
+    :param is_dialog_type_accepted:
     :param dialog_list: list of all dialogs in meta directory
     :return:
     """
+
     if input_id_lst[0] == "-1":
-        return [dialog_id["id"] for dialog_id in dialog_list]
+        return [dialog["id"] for dialog in dialog_list if is_dialog_type_accepted[dialog["type"]]]
     elif len(input_id_lst) == 1:
-        return [int(dialog_id) for dialog_id in input_id_lst[0].split(",")]
+        provided_ids = [int(dialog_id) for dialog_id in input_id_lst[0].split(",")]
+        return [dialog["id"] for dialog in dialog_list if
+                is_dialog_type_accepted[dialog["type"]] and dialog["id"] in provided_ids]
     elif len(input_id_lst) > 1:
-        return [int(dialog_id.replace(",", "")) for dialog_id in input_id_lst]
+        provided_ids = [int(dialog_id.replace(",", "")) for dialog_id in input_id_lst]
+        return [dialog["id"] for dialog in dialog_list if
+                is_dialog_type_accepted[dialog["type"]] and dialog["id"] in provided_ids]
 
 
 def msg_limit_input_handler(msg_limit):
@@ -221,7 +230,6 @@ async def download_dialog(client, id, MSG_LIMIT, config):
 
 
 if __name__ == "__main__":
-
     args = init_args()
 
     CONFIG_PATH = args.config_path
@@ -229,11 +237,15 @@ if __name__ == "__main__":
     SESSION_NAME = args.session_name
     DEBUG_MODE = args.debug_mode
 
+    is_dialog_type_accepted = {'Private dialog': not args.skip_private,
+                               'Group': not args.skip_groups,
+                               'Channel': not args.skip_channels}
+
     config = init_config(CONFIG_PATH)
     dialogs_list = read_dialogs(config["dialogs_list_folder"])
     client = telethon.TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"])
 
-    DIALOGS_ID = dialogs_id_input_handler(args.dialogs_ids, dialogs_list)
+    DIALOGS_ID = dialogs_id_input_handler(args.dialogs_ids, is_dialog_type_accepted, dialogs_list)
 
     # Dialogs are the "conversations you have open".
     # This method returns a list of Dialog, which
