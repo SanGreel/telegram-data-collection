@@ -1,5 +1,7 @@
 import os
 import argparse
+from typing import Dict
+
 import pandas as pd
 import logging
 import json
@@ -7,6 +9,8 @@ import json
 import telethon
 
 from utils.utils import init_config, read_dialogs
+
+REACTIONS_LIMIT_PER_MESSAGE = 100
 
 
 def init_args():
@@ -114,6 +118,35 @@ def msg_handler(msg):
     return msg_attributes
 
 
+async def get_message_reactions(message: telethon.types.Message, dialog_peer: telethon.types.InputPeerChat) \
+        -> Dict[int, str]:
+    """
+    Loads reactions for a single message. Doesn't work for broadcast channels.
+
+    :param message: instance of message
+    :param dialog_peer: instance of this dialog's peer
+
+    :return: dict of "user_id - reaction emoji" pairs
+    """
+    try:
+        result = await client(telethon.functions.messages.GetMessageReactionsListRequest(
+            peer=dialog_peer,
+            id=message.id,
+            limit=REACTIONS_LIMIT_PER_MESSAGE,
+        ))
+
+        reaction_objects = result.reactions
+        reactions = {reaction_object.peer_id.user_id: reaction_object.reaction for reaction_object in reaction_objects}
+
+    except telethon.errors.rpcerrorlist.MsgIdInvalidError:
+        reactions = {}
+
+    except:
+        reactions = None
+
+    return reactions
+
+
 async def download_dialog(client, id, MSG_LIMIT, config):
     """
     Download messages and their metadata for a specific dialog id,
@@ -164,8 +197,8 @@ async def download_dialog(client, id, MSG_LIMIT, config):
     dialog = []
 
     for m in messages:
-
         msg_attrs = msg_handler(m)
+        msg_reactions = await get_message_reactions(m, telethon.utils.get_peer(id))
 
         dialog.append(
             {
@@ -177,6 +210,7 @@ async def download_dialog(client, id, MSG_LIMIT, config):
                 "message": msg_attrs["message"],
                 "type": msg_attrs["type"],
                 "duration": msg_attrs["duration"],
+                "reactions": msg_reactions,
             }
         )
 
