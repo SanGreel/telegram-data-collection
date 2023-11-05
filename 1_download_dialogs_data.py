@@ -14,9 +14,8 @@ import telethon
 
 from utils.utils import init_config, read_dialogs
 
-# REACTIONS_LIMIT_PER_MESSAGE = 100
+REACTIONS_LIMIT_PER_MESSAGE = 100
 DIALOG_DOWNLOAD_DELAY = 5
-DIALOG_DOWNLOADERS_COUNT = 10
 DIALOG_PROCESSORS_COUNT = 3
 
 DIALOG_QUEUE = queue.Queue()
@@ -233,7 +232,7 @@ async def download_dialog_by_username(
 
 
 async def download_dialog(
-    client: telethon.TelegramClient, dialog_id, MSG_LIMIT, config, semaphore
+    client: telethon.TelegramClient, dialog_id, MSG_LIMIT, config
 ):
     """
     Download messages and their metadata for a specific dialog id,
@@ -261,14 +260,8 @@ async def download_dialog(
     except Exception as e:
         print(f"[{timelog()}] [{dialog_id}] Dialog skipped: {e}")
 
-    # semaphore.release()
-
 
 async def download_dialogs(client: telethon.TelegramClient, config):
-    # Create a semaphore to control the number of concurrent producers
-    semaphore = asyncio.Semaphore(DIALOG_DOWNLOADERS_COUNT)
-
-    # Start the producer coroutine
     print(f"[{timelog()}] download_dialogs started, count: {len(DIALOGS_ID)}")
 
     tasks = []
@@ -277,9 +270,8 @@ async def download_dialogs(client: telethon.TelegramClient, config):
             # print(f"[{timelog()}] [{dialog_id}] Dialog already downloaded")
             continue
 
-        # await semaphore.acquire()
         task = asyncio.create_task(
-            download_dialog(client, dialog_id, MSG_LIMIT, config, semaphore)
+            download_dialog(client, dialog_id, MSG_LIMIT, config)
         )
         tasks.append(task)
         await asyncio.sleep(DIALOG_DOWNLOAD_DELAY)
@@ -287,18 +279,6 @@ async def download_dialogs(client: telethon.TelegramClient, config):
     await asyncio.gather(*tasks)
 
     print(f"[{timelog()}] download_dialogs finished")
-
-    # # Create a semaphore to control the number of concurrent producers
-    # semaphore = asyncio.Semaphore(DIALOG_DOWNLOADERS_COUNT)
-
-    # # Start the producer coroutine
-    # print(f"[{timelog()}] download_dialogs started")
-    # producer_tasks = [
-    #     download_dialog(client, dialog_id, MSG_LIMIT, config, semaphore)
-    #     for dialog_id in DIALOGS_ID
-    # ]
-    # await asyncio.gather(*producer_tasks)
-    # print(f"[{timelog()}] download_dialogs finished")
 
 
 def download_dialogs_entrypoint(client: telethon.TelegramClient, config):
@@ -369,16 +349,6 @@ def process_dialogs_entrypoint(config):
 
 
 def download_all(client, config):
-    # producer_thread = threading.Thread(
-    #     target=download_dialogs_entrypoint,
-    #     args=(
-    #         client,
-    #         config,
-    #     ),
-    #     daemon=True,
-    # )
-    # producer_thread.start()
-
     consumer_threads = []
     for _ in range(DIALOG_PROCESSORS_COUNT):
         thread = threading.Thread(
@@ -386,8 +356,6 @@ def download_all(client, config):
         )
         thread.start()
         consumer_threads.append(thread)
-
-    # producer_thread.join()
 
     download_dialogs_entrypoint(client, config)
 
@@ -426,11 +394,6 @@ if __name__ == "__main__":
         args.dialogs_ids, is_dialog_type_accepted, dialogs_list
     )
 
-    # Dialogs are the "conversations you have open".
-    # This method returns a list of Dialog, which
-    # has the .entity attribute and other information.
-    # dialogs = client.get_dialogs()
-
     if DEBUG_MODE:
         logging.basicConfig(level=logging.DEBUG)
 
@@ -438,14 +401,14 @@ if __name__ == "__main__":
         os.mkdir(config["dialogs_data_folder"])
 
     with client:
-        # asyncio.run(client.end_takeout(False))
-        # with client.takeout(
-        #     finalize=True,
-        #     contacts=False,
-        #     users=True,
-        #     chats=True,
-        #     megagroups=True,
-        #     channels=False,
-        #     files=False,
-        # ) as takeout:
-        download_all(client, config)
+        with client.takeout(
+            finalize=True,
+            contacts=False,
+            users=True,
+            chats=True,
+            megagroups=True,
+            channels=True,
+            files=False,
+        ) as takeout:
+            download_all(takeout, config)
+        # download_all(client, config)
