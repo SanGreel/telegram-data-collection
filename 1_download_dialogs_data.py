@@ -1,3 +1,4 @@
+import asyncio
 import os
 import argparse
 from typing import Dict
@@ -186,16 +187,23 @@ async def get_message_reactions(
     return reactions
 
 
-def print_dialog(id, config):
-    try:
-        dialog_data_json = f'{config["dialogs_list_folder"]}/{id}.json'
-        with open(dialog_data_json) as json_file:
-            dialog_data = json.load(json_file)
-            print(
-                f"Loading dialog #{id}, name: {dialog_data.name}, type: {dialog_data.type}"
-            )
-    except:
-        print(f"Loading dialog #{id}")
+async def process_message(i, m, id):
+    print(f"#{i} processing message {m.id}")
+
+    msg_attrs = msg_handler(m)
+    msg_reactions = await get_message_reactions(m, telethon.utils.get_peer(id))
+
+    return {
+        "id": m.id,
+        "date": m.date,
+        "from_id": m.from_id,
+        "to_id": msg_attrs["to_id"],
+        "fwd_from": m.fwd_from,
+        "message": msg_attrs["message"],
+        "type": msg_attrs["type"],
+        "duration": msg_attrs["duration"],
+        "reactions": msg_reactions,
+    }
 
 
 async def download_dialog(client, id, MSG_LIMIT, config):
@@ -205,86 +213,75 @@ async def download_dialog(client, id, MSG_LIMIT, config):
 
     :return: None
     """
+
+    print(f"#{id} Downloading dialog")
     try:
-        # print(f"client.get_entity({id})")
-
-        print(f"downloading {id}")
-
         tg_entity = await client.get_entity(id)
         messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
-
     except ValueError:
-        errmsg = f"No such ID found: #{id}"
-        print(errmsg)
-
-        try:
-            print("Trying to init through username")
-
-            username = None
-            dialog_data_json = f'{config["dialogs_list_folder"]}/{id}.json'
-
-            with open(dialog_data_json) as json_file:
-                dialog_data = json.load(json_file)
-
-                if (
-                    "users" in dialog_data
-                    and len(dialog_data["users"]) == 1
-                    and "username" in dialog_data["users"][0]
-                ):
-                    username = dialog_data["users"][0]["username"]
-
-                    print(f"Username: {username}")
-
-                    if username:
-                        _ = await client.get_entity(username)
-                        tg_entity = await client.get_entity(id)
-                        messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
-
-                        print(f"Done.")
-                    else:
-                        raise ValueError(
-                            errmsg,
-                        )
-                else:
-                    print(f"Error for dialog #{id}")
-                    print(dialog_data)
-                    return
-        except ValueError:
-            raise ValueError(
-                errmsg,
-            )
+        messages = await download_dialog_by_username(client, id, MSG_LIMIT, config)
 
     count = len(messages)
-    dialog = [count]
 
-    print(f"processing messages started, count: {count}")
+    print(f"#{id} Processing messages started, count: {count}")
+    tasks = [count]
+    for i, m in enumerate(messages):
+        task = process_message(i, m, id)
+        tasks[i] = task
 
-    for [i, m] in enumerate(messages):
-        print(f"#{i} processing message {m.id}")
+    dialog = await asyncio.gather(*tasks)
+    print(f"#{id} Processing messages finished")
 
-        msg_attrs = msg_handler(m)
-        msg_reactions = await get_message_reactions(m, telethon.utils.get_peer(id))
-
-        dialog[i] = {
-            "id": m.id,
-            "date": m.date,
-            "from_id": m.from_id,
-            "to_id": msg_attrs["to_id"],
-            "fwd_from": m.fwd_from,
-            "message": msg_attrs["message"],
-            "type": msg_attrs["type"],
-            "duration": msg_attrs["duration"],
-            "reactions": msg_reactions,
-        }
-
-        print(f"#{i} processing message {m.id} finished")
-
-    print(f"processing messages finished")
-
+    print(f"#{id} Saving dialog to {str(id)}.csv")
     dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
-
     df = pd.DataFrame(dialog)
     df.to_csv(dialog_file_path)
+    print(f"#{id} Dialog saved to {str(id)}.csv")
+
+
+async def download_dialog_by_username(client, id, MSG_LIMIT, config):
+    errmsg = f"No such ID found: #{id}"
+    print(errmsg)
+
+    messages = []
+
+    try:
+        print("Trying to init through username")
+
+        username = None
+        dialog_data_json = f'{config["dialogs_list_folder"]}/{id}.json'
+
+        with open(dialog_data_json) as json_file:
+            dialog_data = json.load(json_file)
+
+            if (
+                "users" in dialog_data
+                and len(dialog_data["users"]) == 1
+                and "username" in dialog_data["users"][0]
+            ):
+                username = dialog_data["users"][0]["username"]
+
+                print(f"Username: {username}")
+
+                if username:
+                    _ = await client.get_entity(username)
+                    tg_entity = await client.get_entity(id)
+                    messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
+                    print(f"Done.")
+                else:
+                    raise ValueError(
+                        errmsg,
+                    )
+            else:
+                print(f"Error for dialog #{id}")
+                print(dialog_data)
+                return
+    except ValueError:
+        raise ValueError(
+            errmsg,
+        )
+
+    return messages
 
 
 if __name__ == "__main__":
@@ -326,9 +323,19 @@ if __name__ == "__main__":
         os.mkdir(config["dialogs_data_folder"])
 
     for id in DIALOGS_ID:
-        print_dialog(id, config)
-
         with client:
             client.loop.run_until_complete(
                 download_dialog(client, id, MSG_LIMIT, config)
             )
+
+
+# def print_dialog(id, config):
+#     try:
+#         dialog_data_json = f'{config["dialogs_list_folder"]}/{id}.json'
+#         with open(dialog_data_json) as json_file:
+#             dialog_data = json.load(json_file)
+#             print(
+#                 f"Loading dialog #{id}, name: {dialog_data.name}, type: {dialog_data.type}"
+#             )
+#     except:
+#         print(f"Loading dialog #{id}")
