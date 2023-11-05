@@ -15,7 +15,7 @@ import telethon
 from utils.utils import init_config, read_dialogs
 
 REACTIONS_LIMIT_PER_MESSAGE = 100
-DIALOG_DOWNLOAD_DELAY = 5
+DIALOG_DOWNLOAD_DELAY = 3
 DIALOG_PROCESSORS_COUNT = 3
 
 DIALOG_QUEUE = queue.Queue()
