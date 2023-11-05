@@ -119,8 +119,6 @@ def msg_handler(msg):
         "to_id": "",
     }
 
-    print("msg_handler")
-
     if hasattr(msg.to_id, "user_id"):
         msg_attributes["to_id"] = msg.to_id.user_id
     else:
@@ -150,8 +148,6 @@ def msg_handler(msg):
     elif msg.photo:
         msg_attributes["type"] = "photo"
 
-    print("msg_handler finish")
-
     return msg_attributes
 
 
@@ -166,8 +162,6 @@ async def get_message_reactions(
 
     :return: dict of "user_id - reaction emoji" pairs
     """
-
-    print("msg_handler")
 
     try:
         result = await client(
@@ -190,8 +184,6 @@ async def get_message_reactions(
     except:
         reactions = None
 
-    print("msg_handler finish")
-
     return reactions
 
 
@@ -200,53 +192,38 @@ def timelog():
     return formatted_time
 
 
-async def download_dialog_by_username(takeout, id, MSG_LIMIT, config):
-    errmsg = f"No such ID found: #{id}"
-    print(errmsg)
-
+async def download_dialog_by_username(
+    client: telethon.TelegramClient, dialog_id, MSG_LIMIT, config
+):
     messages = []
+    dialog_data_json = f'{config["dialogs_list_folder"]}/{dialog_id}.json'
+    with open(dialog_data_json) as json_file:
+        dialog_data = json.load(json_file)
 
-    try:
-        print("Trying to init through username")
+        if (
+            "users" in dialog_data
+            and len(dialog_data["users"]) == 1
+            and "username" in dialog_data["users"][0]
+            and dialog_data["users"][0]["username"]
+        ):
+            username = dialog_data["users"][0]["username"]
+            _ = await client.get_entity(username)
+            tg_entity = await client.get_entity(dialog_id)
+            messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
 
-        username = None
-        dialog_data_json = f'{config["dialogs_list_folder"]}/{id}.json'
-
-        with open(dialog_data_json) as json_file:
-            dialog_data = json.load(json_file)
-
-            if (
-                "users" in dialog_data
-                and len(dialog_data["users"]) == 1
-                and "username" in dialog_data["users"][0]
-            ):
-                username = dialog_data["users"][0]["username"]
-
-                print(f"Username: {username}")
-
-                if username:
-                    _ = await takeout.get_entity(username)
-                    tg_entity = await takeout.get_entity(id)
-                    messages = await takeout.get_messages(tg_entity, limit=MSG_LIMIT)
-                    print(f"Done.")
-                else:
-                    raise ValueError(
-                        errmsg,
-                    )
-            else:
-                print(f"Error for dialog #{id}")
-                print(dialog_data)
-                return
-    except ValueError:
-        raise ValueError(
-            errmsg,
-        )
+            print(
+                f"[{timelog()}] [{dialog_id}] Dialog downloaded throught username {username}."
+            )
+        else:
+            raise Exception(
+                f"Cannot download through username, dialog_data: {dialog_data}"
+            )
 
     return messages
 
 
 async def download_dialog(
-    takeout: telethon.TelegramClient, dialog_id, MSG_LIMIT, config, semaphore
+    client: telethon.TelegramClient, dialog_id, MSG_LIMIT, config, semaphore
 ):
     """
     Download messages and their metadata for a specific dialog id,
@@ -257,71 +234,75 @@ async def download_dialog(
 
     await semaphore.acquire()
 
-    print(f"[{timelog()}] [{dialog_id}] Downloading dialog started")
     try:
-        tg_entity = await takeout.get_entity(dialog_id)
-        messages = await takeout.get_messages(tg_entity, limit=MSG_LIMIT)
-    except ValueError:
-        messages = await download_dialog_by_username(
-            takeout, dialog_id, MSG_LIMIT, config
-        )
-    print(f"[{timelog()}] [{dialog_id}] Downloading dialog finished")
+        try:
+            tg_entity = await client.get_entity(dialog_id)
+            messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
+            print(f"[{timelog()}] [{dialog_id}] Dialog downloaded")
+        except ValueError:
+            messages = await download_dialog_by_username(
+                client, dialog_id, MSG_LIMIT, config
+            )
 
-    await DIALOG_QUEUE.put({"dialog_id": dialog_id, "messages": messages})
+        if not messages or len(messages) == 0:
+            raise Exception("Messages are empty.")
+
+        await DIALOG_QUEUE.put({"dialog_id": dialog_id, "messages": messages})
+
+    except Exception as e:
+        print(f"[{timelog()}] [{dialog_id}] Dialog skipped: {e}")
 
     semaphore.release()
 
 
-# async def download_dialogs(client, DIALOGS_ID, MSG_LIMIT, config):
-#     with client:
-#         tasks = [len(DIALOGS_ID)]
-#         for [i, id] in enumerate(DIALOGS_ID):
-#             task = download_dialog(client, id, MSG_LIMIT, config)
-#             tasks[i] = task
-
-#         await asyncio.gather(*tasks)
-
-
 async def process_message(i, m, dialog_id):
-    print(f"[{timelog()}] [{dialog_id}] processing message #{i} {m.id}")
-    msg_attrs = msg_handler(m)
-    msg_reactions = await get_message_reactions(m, telethon.utils.get_peer(dialog_id))
+    # print(f"[{timelog()}] [{dialog_id}] Processing message №{i} with id={m.id}")
+    try:
+        msg_attrs = msg_handler(m)
+        msg_reactions = await get_message_reactions(
+            m, telethon.utils.get_peer(dialog_id)
+        )
+        return {
+            "id": m.id,
+            "date": m.date,
+            "from_id": m.from_id,
+            "to_id": msg_attrs["to_id"],
+            "fwd_from": m.fwd_from,
+            "message": msg_attrs["message"],
+            "type": msg_attrs["type"],
+            "duration": msg_attrs["duration"],
+            "reactions": msg_reactions,
+        }
+    except Exception as e:
+        print(
+            f"[{timelog()}] [{dialog_id}] Processing message №{i} with id={m.id} failed: {e}"
+        )
+        return None
 
-    return {
-        "id": m.id,
-        "date": m.date,
-        "from_id": m.from_id,
-        "to_id": msg_attrs["to_id"],
-        "fwd_from": m.fwd_from,
-        "message": msg_attrs["message"],
-        "type": msg_attrs["type"],
-        "duration": msg_attrs["duration"],
-        "reactions": msg_reactions,
-    }
 
-
-async def process_dialog(dialog_data, config):
-    dialog_id = dialog_data.dialog_data
-    messages = dialog_data.messages
+async def process_dialog(dialog, config):
+    dialog_id = dialog["dialog_id"]
+    messages = dialog["messages"]
     count = len(messages)
 
-    print(f"[{timelog()}] [{dialog_id}] Processing dialog started, count: {count}")
-    # tasks = [count]
-    dialog = [count]
-    for i, m in enumerate(messages):
-        dialog[i] = process_message(i, m, dialog_id)
-        # tasks[i] = task
+    try:
+        print(f"[{timelog()}] [{dialog_id}] Processing dialog started, count: {count}")
 
-    # dialog = await asyncio.gather(*tasks)
-    print(f"[{timelog()}] [{dialog_id}] Processing dialog finished")
+        dialog = [None] * count
+        for i, m in enumerate(messages):
+            dialog[i] = await process_message(i, m, dialog_id)
 
-    print(f"[{timelog()}] [{dialog_id}] Saving dialog to {str(dialog_id)}.csv")
-    dialog_file_path = os.path.join(
-        config["dialogs_data_folder"], f"{str(dialog_id)}.csv"
-    )
-    df = pd.DataFrame(dialog)
-    df.to_csv(dialog_file_path)
-    print(f"[{timelog()}] [{dialog_id}] Dialog saved to {str(dialog_id)}.csv")
+        dialog_file_path = os.path.join(
+            config["dialogs_data_folder"], f"{str(dialog_id)}.csv"
+        )
+        df = pd.DataFrame(dialog)
+        df.to_csv(dialog_file_path)
+
+        print(
+            f"[{timelog()}] [{dialog_id}] Processing dialog finished, saved to {str(dialog_id)}.csv"
+        )
+    except Exception as e:
+        print(f"[{timelog()}] [{dialog_id}] Processing dialog failed: {e}")
 
 
 async def download_all(client, DIALOGS_ID, MSG_LIMIT, config):
@@ -329,25 +310,27 @@ async def download_all(client, DIALOGS_ID, MSG_LIMIT, config):
     producer_semaphore = asyncio.Semaphore(MAX_ACTIVE_PRODUCER_COUNT)
 
     # Start the producer coroutine
+    print(f"[{timelog()}] download_all - producers started")
     producer_tasks = [
         download_dialog(client, dialog_id, MSG_LIMIT, config, producer_semaphore)
         for dialog_id in DIALOGS_ID
     ]
-
-    print(f"[{timelog()}] download_all - producers started")
-    await asyncio.gather(*producer_tasks)
+    producer_promise = asyncio.gather(*producer_tasks)
+    print(f"[{timelog()}] download_all - producers finished")
 
     ################################
 
     # Start multiple consumer coroutines (processing tasks)
+    print(f"[{timelog()}] download_all - consumers started")
     consumer_tasks = [
         process_dialog(await DIALOG_QUEUE.get(), config) for _ in range(CONSUMER_COUNT)
     ]
+    consumer_promise = asyncio.gather(*consumer_tasks)
+    print(f"[{timelog()}] download_all - consumers finished")
 
-    print(f"[{timelog()}] download_all - consumers started")
-    await asyncio.gather(*consumer_tasks)
-
-    print(f"[{timelog()}] download_all finished")
+    print(f"[{timelog()}] download_all - gather started")
+    await asyncio.gather(producer_promise, consumer_promise)
+    print(f"[{timelog()}] download_all - gather finished")
 
 
 if __name__ == "__main__":
@@ -398,14 +381,6 @@ if __name__ == "__main__":
             channels=False,
             files=False,
         ) as takeout:
-            asyncio.run(download_all(takeout, DIALOGS_ID, MSG_LIMIT, config))
-
-    # try:
-    # except telethon.errors.TakeoutInitDelayError as e:
-    #     print(f"[{timelog()}]Waiting {e.seconds} seconds before takeout")
-
-    # with client:
-    #     for id in DIALOGS_ID:
-    #         client.loop.run_until_complete(
-    #             download_dialog(client, id, MSG_LIMIT, config)
-    #         )
+            takeout.loop.run_until_complete(
+                download_all(takeout, DIALOGS_ID, MSG_LIMIT, config)
+            )
