@@ -14,9 +14,11 @@ import telethon
 
 from utils.utils import init_config, read_dialogs
 
-REACTIONS_LIMIT_PER_MESSAGE = 100
+# REACTIONS_LIMIT_PER_MESSAGE = 100
+DIALOG_DOWNLOAD_DELAY = 5
 DIALOG_DOWNLOADERS_COUNT = 10
 DIALOG_PROCESSORS_COUNT = 3
+
 DIALOG_QUEUE = queue.Queue()
 
 
@@ -196,6 +198,10 @@ def timelog():
 ###################################
 
 
+def get_path(dialog_id, config):
+    return os.path.join(config["dialogs_data_folder"], f"{str(dialog_id)}.csv")
+
+
 async def download_dialog_by_username(
     client: telethon.TelegramClient, dialog_id, MSG_LIMIT, config
 ):
@@ -236,8 +242,6 @@ async def download_dialog(
     :return: None
     """
 
-    await semaphore.acquire()
-
     print(f"[{timelog()}] [{dialog_id}] Downloading dialog started")
     try:
         try:
@@ -257,7 +261,7 @@ async def download_dialog(
     except Exception as e:
         print(f"[{timelog()}] [{dialog_id}] Dialog skipped: {e}")
 
-    semaphore.release()
+    # semaphore.release()
 
 
 async def download_dialogs(client: telethon.TelegramClient, config):
@@ -265,13 +269,36 @@ async def download_dialogs(client: telethon.TelegramClient, config):
     semaphore = asyncio.Semaphore(DIALOG_DOWNLOADERS_COUNT)
 
     # Start the producer coroutine
-    print(f"[{timelog()}] download_dialogs started")
-    producer_tasks = [
-        download_dialog(client, dialog_id, MSG_LIMIT, config, semaphore)
-        for dialog_id in DIALOGS_ID
-    ]
-    await asyncio.gather(*producer_tasks)
+    print(f"[{timelog()}] download_dialogs started, count: {len(DIALOGS_ID)}")
+
+    tasks = []
+    for dialog_id in DIALOGS_ID:
+        if os.path.exists(get_path(dialog_id, config)):
+            # print(f"[{timelog()}] [{dialog_id}] Dialog already downloaded")
+            continue
+
+        # await semaphore.acquire()
+        task = asyncio.create_task(
+            download_dialog(client, dialog_id, MSG_LIMIT, config, semaphore)
+        )
+        tasks.append(task)
+        await asyncio.sleep(DIALOG_DOWNLOAD_DELAY)
+
+    await asyncio.gather(*tasks)
+
     print(f"[{timelog()}] download_dialogs finished")
+
+    # # Create a semaphore to control the number of concurrent producers
+    # semaphore = asyncio.Semaphore(DIALOG_DOWNLOADERS_COUNT)
+
+    # # Start the producer coroutine
+    # print(f"[{timelog()}] download_dialogs started")
+    # producer_tasks = [
+    #     download_dialog(client, dialog_id, MSG_LIMIT, config, semaphore)
+    #     for dialog_id in DIALOGS_ID
+    # ]
+    # await asyncio.gather(*producer_tasks)
+    # print(f"[{timelog()}] download_dialogs finished")
 
 
 def download_dialogs_entrypoint(client: telethon.TelegramClient, config):
@@ -324,9 +351,7 @@ async def process_dialogs(config):
             for i, m in enumerate(messages):
                 dialog[i] = await process_message(i, m, dialog_id)
 
-            dialog_file_path = os.path.join(
-                config["dialogs_data_folder"], f"{str(dialog_id)}.csv"
-            )
+            dialog_file_path = get_path(dialog_id, config)
             df = pd.DataFrame(dialog)
             df.to_csv(dialog_file_path)
 
@@ -372,32 +397,6 @@ def download_all(client, config):
 
     for thread in consumer_threads:
         thread.join()
-
-    # # Create a semaphore to control the number of concurrent producers
-    # producer_semaphore = asyncio.Semaphore(MAX_ACTIVE_DOWNLOAD_COUNT)
-
-    # # Start the producer coroutine
-    # print(f"[{timelog()}] download_all - producers started")
-    # producer_tasks = [
-    #     download_dialog(client, dialog_id, MSG_LIMIT, config, producer_semaphore)
-    #     for dialog_id in DIALOGS_ID
-    # ]
-    # producer_promise = asyncio.gather(*producer_tasks)
-    # print(f"[{timelog()}] download_all - producers finished")
-
-    # ################################
-
-    # # Start multiple consumer coroutines (processing tasks)
-    # print(f"[{timelog()}] download_all - consumers started")
-    # consumer_tasks = [
-    #     process_dialog(await DIALOG_QUEUE.get(), config) for _ in range(CONSUMER_COUNT)
-    # ]
-    # consumer_promise = asyncio.gather(*consumer_tasks)
-    # print(f"[{timelog()}] download_all - consumers finished")
-
-    # print(f"[{timelog()}] download_all - gather started")
-    # await asyncio.gather(producer_promise, consumer_promise)
-    # print(f"[{timelog()}] download_all - gather finished")
 
 
 if __name__ == "__main__":
