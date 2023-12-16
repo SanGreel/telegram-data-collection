@@ -13,9 +13,7 @@ def init_args():
 
     :return: argparse.Namespace
     """
-    parser = argparse.ArgumentParser(
-        description="Download dialogs list for user."
-    )
+    parser = argparse.ArgumentParser(description="Download dialogs list for user.")
 
     parser.add_argument(
         "--dialogs_limit", type=int, help="number of dialogs", required=True
@@ -46,7 +44,7 @@ async def save_dialogs(client, dialogs_limit):
         dialog_name = dialog.name
         dialog_members = []
 
-        print(f"dialog #{dialog_id}")
+        skip = False
 
         dialog_type = ""
         if dialog.is_user:
@@ -55,6 +53,12 @@ async def save_dialogs(client, dialogs_limit):
             dialog_type = "Group"
         elif dialog.is_channel:
             dialog_type = "Channel"
+            skip = True
+
+        prefix = "SKIP " if skip else ""
+        print(f"{prefix}dialog #{dialog_id}, name: {dialog_name}, type: {dialog_type}")
+        if skip:
+            continue
 
         try:
             users = await client.get_participants(dialog)
@@ -73,7 +77,9 @@ async def save_dialogs(client, dialogs_limit):
         except BaseException as error:
             print("ERROR\n", error)
 
-        save_dialog(dialog_id, dialog_name, dialog_members, dialog_type, DIALOGS_LIST_FOLDER)
+        save_dialog(
+            dialog_id, dialog_name, dialog_members, dialog_type, DIALOGS_LIST_FOLDER
+        )
 
 
 if __name__ == "__main__":
@@ -85,7 +91,12 @@ if __name__ == "__main__":
     SESSION_NAME = args.session_name
 
     config = init_config(CONFIG_PATH)
-    client = TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"], system_version="4.16.30-vxCUSTOM")
+    client = TelegramClient(
+        SESSION_NAME,
+        config["api_id"],
+        config["api_hash"],
+        system_version="4.16.30-vxCUSTOM",
+    )
 
     DIALOGS_LIST_FOLDER = config["dialogs_list_folder"]
 
