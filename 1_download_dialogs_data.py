@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
     config = init_config(CONFIG_PATH)
     dialogs_list = read_dialogs(config["dialogs_list_folder"])
-    client = telethon.TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"])
+    client = telethon.TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"], system_version="4.16.30-vxCUSTOM")
 
     DIALOGS_ID = dialogs_id_input_handler(args.dialogs_ids, is_dialog_type_accepted, dialogs_list)
 

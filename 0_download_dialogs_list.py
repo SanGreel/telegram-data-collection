@@ -85,7 +85,7 @@ if __name__ == "__main__":
     SESSION_NAME = args.session_name
 
     config = init_config(CONFIG_PATH)
-    client = TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"])
+    client = TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"], system_version="4.16.30-vxCUSTOM")
 
     DIALOGS_LIST_FOLDER = config["dialogs_list_folder"]
 
