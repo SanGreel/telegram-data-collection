@@ -45,6 +45,7 @@ def init_args():
     parser.add_argument('--skip_private', action='store_true')
     parser.add_argument('--skip_groups', action='store_true')
     parser.add_argument('--skip_channels', action='store_true')
+    parser.add_argument('--continuation', action='store_true', help="Enable continuation mode to resume from last downloaded message")
 
     return parser.parse_args()
 
@@ -155,7 +156,6 @@ async def get_message_reactions(message: telethon.types.Message, dialog_peer: te
 
     return reactions
 
-
 async def download_dialog(client, id, MSG_LIMIT, config):
     """
     Download messages and their metadata for a specific dialog id,
@@ -228,6 +228,84 @@ async def download_dialog(client, id, MSG_LIMIT, config):
     df = pd.DataFrame(dialog)
     df.to_csv(dialog_file_path)
 
+async def download_dialog_within_batches(client, id, MSG_LIMIT, config):
+    """
+    Download messages and their metadata for a specific dialog id,
+    and save them in *ID*.csv. If a CSV already exists,
+    resume from the last message.
+
+    :return: None
+    """
+    try:
+        tg_entity = await client.get_entity(id)
+    except ValueError:
+        errmsg = f"No such ID found: #{id}"
+        print(errmsg)
+        return
+
+    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
+    all_messages = []
+    offset_id = None
+    batch_size = 10000  # Download 10,000 messages at a time
+    total_messages = 0
+
+    if os.path.exists(dialog_file_path) and os.path.getsize(dialog_file_path) > 0:
+        print(f"Continuation mode: Found existing CSV for dialog #{id}. Resuming download...")
+        df = pd.read_csv(dialog_file_path)
+        if not df.empty:
+            last_row = df.iloc[-1]
+            offset_id = last_row['id']
+            total_messages = len(df)
+            all_messages = df.to_dict('records')
+        print(f"Resuming from message ID: {offset_id}")
+    else:
+        print(f"Continuation mode:Starting fresh download for dialog #{id}...")
+
+    while total_messages < MSG_LIMIT:
+        try:
+            print(f"Downloading batch {'starting from message ID: ' + str(offset_id) if offset_id else 'of most recent messages'}")
+            messages = await client.get_messages(tg_entity, limit=min(batch_size, MSG_LIMIT - total_messages), offset_id=offset_id)
+            
+            if not messages:
+                break  # No more messages to fetch
+            
+            new_messages = 0
+            for m in messages:
+                if offset_id and m.id >= offset_id:
+                    continue  # Skip messages we already have
+                
+                msg_attrs = msg_handler(m)
+                msg_reactions = await get_message_reactions(m, telethon.utils.get_peer(id))
+
+                all_messages.append({
+                    "id": m.id,
+                    "date": m.date,
+                    "from_id": m.from_id,
+                    "to_id": msg_attrs["to_id"],
+                    "fwd_from": m.fwd_from,
+                    "message": msg_attrs["message"],
+                    "type": msg_attrs["type"],
+                    "duration": msg_attrs["duration"],
+                    "reactions": msg_reactions,
+                })
+                new_messages += 1
+
+            total_messages += new_messages
+            if messages:
+                offset_id = messages[-1].id
+            print(f"Downloaded {new_messages} new messages. Total: {total_messages}")
+
+            # Save progress after each batch
+            df = pd.DataFrame(all_messages)
+            df.to_csv(dialog_file_path, index=False)
+            print(f"Saved progress to {dialog_file_path}")
+
+        except Exception as e:
+            print(f"Error occurred while downloading batch: {str(e)}")
+            break
+
+    print(f"Finished downloading. Total messages: {len(all_messages)}")
+
 
 if __name__ == "__main__":
     args = init_args()
@@ -236,6 +314,7 @@ if __name__ == "__main__":
     MSG_LIMIT = msg_limit_input_handler(args.dialog_msg_limit)
     SESSION_NAME = args.session_name
     DEBUG_MODE = args.debug_mode
+    CONTINUATION = args.continuation
 
     is_dialog_type_accepted = {'Private dialog': not args.skip_private,
                                'Group': not args.skip_groups,
@@ -262,4 +341,7 @@ if __name__ == "__main__":
         print(f"Loading dialog #{id}")
 
         with client:
-            client.loop.run_until_complete(download_dialog(client, id, MSG_LIMIT, config))
+            if(CONTINUATION):
+                client.loop.run_until_complete(download_dialog_within_batches(client, id, MSG_LIMIT, config))
+            else:
+                client.loop.run_until_complete(download_dialog(client, id, MSG_LIMIT, config, CONTINUATION))
