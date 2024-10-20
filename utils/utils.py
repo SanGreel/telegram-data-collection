@@ -5,8 +5,10 @@ from glob import glob
 
 def init_config(config_path):
     if not os.path.exists(config_path):
-        raise Exception("Config file doesn't exist\n"
-                        f"Please, create a new config file here {config_path}")
+        raise Exception(
+            "Config file doesn't exist\n"
+            f"Please, create a new config file here {config_path}"
+        )
         # api_id, api_hash = "", ""
         # config = {}
         #
@@ -27,7 +29,9 @@ def init_config(config_path):
             config = json.load(json_file)
 
     default_data_folder = "../data"
-    if config["dialogs_data_folder"].startswith(default_data_folder) and not os.path.exists(default_data_folder):
+    if config["dialogs_data_folder"].startswith(
+        default_data_folder
+    ) and not os.path.exists(default_data_folder):
         os.mkdir(default_data_folder)
 
     if not os.path.exists(config["dialogs_data_folder"]):
@@ -57,12 +61,18 @@ def read_dialogs(metadata_folder, metadata_format="json"):
     return None
 
 
-def save_dialog(dialog_id, name_of_dialog, users_names, type_of_dialog, dialogs_list_folder="data/dialogs_list"):
+def save_dialog(
+    dialog_id,
+    name_of_dialog,
+    users_names,
+    type_of_dialog,
+    dialogs_list_folder="data/dialogs_list",
+):
     metadata = {
         "id": dialog_id,
         "name": name_of_dialog,
         "type": type_of_dialog,
-        "users": users_names
+        "users": users_names,
     }
 
     dialog_file_path = os.path.join(dialogs_list_folder, str(dialog_id) + ".json")
