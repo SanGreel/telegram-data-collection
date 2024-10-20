@@ -18,7 +18,8 @@ path to config file
 `--debug_mode`
 Debug mode
 
-
+`--continuation`
+Before loading dialog checks whether it is in your `../data/dialogs` folder, starts loading messages from last item in csv if `.csv` with that id exist. Downloads messages in batches of 10,000 messages.
 ##### 1_download_dialogs_data.py
 Download all messages from the dialogs.
 
