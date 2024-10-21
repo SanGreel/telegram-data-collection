@@ -192,7 +192,7 @@ async def download_dialog(
     """
     Download messages and their metadata for a specific dialog id,
     and save them in *ID*.csv
-    
+ 
     :return: None
     """
     tg_entity = None
@@ -341,18 +341,9 @@ async def process_messages(messages, dialog_peer):
             {
                 "id": m.id,
                 "date": m.date,
-                "from_id": (
-                    m.from_id.user_id
-                    if isinstance(m.from_id, telethon.tl.types.PeerUser)
-                    else None
-                ),
+                "from_id": m.from_id,
                 "to_id": msg_attrs["to_id"],
-                "fwd_from": (
-                    m.fwd_from.from_id.user_id
-                    if m.fwd_from
-                    and isinstance(m.fwd_from.from_id, telethon.tl.types.PeerUser)
-                    else None
-                ),
+                "fwd_from": m.fwd_from,
                 "message": msg_attrs["message"],
                 "type": msg_attrs["type"],
                 "duration": msg_attrs["duration"],
