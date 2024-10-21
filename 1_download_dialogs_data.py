@@ -42,9 +42,9 @@ def init_args():
     )
     parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
     parser.add_argument("--session_name", type=str, help="session name", default="tmp")
-    parser.add_argument("--skip_private", action="store_true")
-    parser.add_argument("--skip_groups", action="store_true")
-    parser.add_argument("--skip_channels", action="store_true")
+    parser.add_argument('--skip_private', action='store_true')
+    parser.add_argument('--skip_groups', action='store_true')
+    parser.add_argument('--skip_channels', action='store_true')
     parser.add_argument(
         "--skip_progress",
         action="store_true",
@@ -189,11 +189,48 @@ async def get_message_reactions(
 async def download_dialog(
     client, id, MSG_LIMIT, config, skip_progress=False, all_at_once=False
 ):
+    tg_entity=None
     try:
         tg_entity = await client.get_entity(id)
     except ValueError:
-        print(f"No such ID found: #{id}")
-        return
+        errmsg = f"No such ID found: #{id}"
+        print(errmsg)
+
+        try:
+            print("Trying to init through username")
+
+            username = None
+            dialog_data_json = f'{config["dialogs_list_folder"]}/{id}.json'
+
+            with open(dialog_data_json) as json_file:
+                dialog_data = json.load(json_file)
+
+                if (
+                    "users" in dialog_data
+                    and len(dialog_data["users"]) == 1
+                    and "username" in dialog_data["users"][0]
+                ):
+                    username = dialog_data["users"][0]["username"]
+
+                    print(f"Username: {username}")
+
+                    if username:
+                        _ = await client.get_entity(username)
+                        tg_entity = await client.get_entity(id)
+
+                        print(f"Done.")
+                    else:
+                        raise ValueError(
+                            errmsg,
+                        )
+                else:
+                    print(f"Error for dialog #{id}")
+                    print(dialog_data)
+                    return
+        except ValueError:
+            raise ValueError(
+                errmsg,
+            )
 
     dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
     all_messages = []
@@ -332,8 +369,8 @@ if __name__ == "__main__":
     MSG_LIMIT = msg_limit_input_handler(args.dialog_msg_limit)
     SESSION_NAME = args.session_name
     DEBUG_MODE = args.debug_mode
-    skip_progress = args.skip_progress
-    all_at_once = args.all_at_once
+    SKIP_PROGRESS = args.skip_progress
+    ALL_AT_ONCE = args.all_at_once
 
     is_dialog_type_accepted = {
         "Private dialog": not args.skip_private,
@@ -375,7 +412,7 @@ if __name__ == "__main__":
                     id,
                     MSG_LIMIT,
                     config,
-                    skip_progress=skip_progress,
-                    all_at_once=all_at_once,
+                    skip_progress=SKIP_PROGRESS ,
+                    all_at_once=ALL_AT_ONCE,
                 )
             )
