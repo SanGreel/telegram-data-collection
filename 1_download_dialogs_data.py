@@ -42,15 +42,28 @@ def init_args():
     )
     parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
     parser.add_argument("--session_name", type=str, help="session name", default="tmp")
-    parser.add_argument('--skip_private', action='store_true')
-    parser.add_argument('--skip_groups', action='store_true')
-    parser.add_argument('--skip_channels', action='store_true')
-    parser.add_argument('--continuation', action='store_true', help="Enable continuation mode to resume from last downloaded message")
+    parser.add_argument("--skip_private", action="store_true")
+    parser.add_argument("--skip_groups", action="store_true")
+    parser.add_argument("--skip_channels", action="store_true")
+    parser.add_argument(
+        "--skip_progress",
+        action="store_true",
+        help="Download all messages regardless of the previous progress",
+        default=False,
+    )
+    parser.add_argument(
+        "--all_at_once",
+        action="store_true",
+        help="Download all messages all at once",
+        default=False,
+    )
 
     return parser.parse_args()
 
 
-def dialogs_id_input_handler(input_id_lst, is_dialog_type_accepted, dialog_list="data/dialogs"):
+def dialogs_id_input_handler(
+    input_id_lst, is_dialog_type_accepted, dialog_list="data/dialogs"
+):
     """
     Functions handles input_id_lst depending on the input
 
@@ -61,15 +74,25 @@ def dialogs_id_input_handler(input_id_lst, is_dialog_type_accepted, dialog_list=
     """
 
     if input_id_lst[0] == "-1":
-        return [dialog["id"] for dialog in dialog_list if is_dialog_type_accepted[dialog["type"]]]
+        return [
+            dialog["id"]
+            for dialog in dialog_list
+            if is_dialog_type_accepted[dialog["type"]]
+        ]
     elif len(input_id_lst) == 1:
         provided_ids = [int(dialog_id) for dialog_id in input_id_lst[0].split(",")]
-        return [dialog["id"] for dialog in dialog_list if
-                is_dialog_type_accepted[dialog["type"]] and dialog["id"] in provided_ids]
+        return [
+            dialog["id"]
+            for dialog in dialog_list
+            if is_dialog_type_accepted[dialog["type"]] and dialog["id"] in provided_ids
+        ]
     elif len(input_id_lst) > 1:
         provided_ids = [int(dialog_id.replace(",", "")) for dialog_id in input_id_lst]
-        return [dialog["id"] for dialog in dialog_list if
-                is_dialog_type_accepted[dialog["type"]] and dialog["id"] in provided_ids]
+        return [
+            dialog["id"]
+            for dialog in dialog_list
+            if is_dialog_type_accepted[dialog["type"]] and dialog["id"] in provided_ids
+        ]
 
 
 def msg_limit_input_handler(msg_limit):
@@ -128,8 +151,9 @@ def msg_handler(msg):
     return msg_attributes
 
 
-async def get_message_reactions(message: telethon.types.Message, dialog_peer: telethon.types.InputPeerChat) \
-        -> Dict[int, str]:
+async def get_message_reactions(
+    message: telethon.types.Message, dialog_peer: telethon.types.InputPeerChat
+) -> Dict[int, str]:
     """
     Loads reactions for a single message. Doesn't work for broadcast channels.
 
@@ -139,14 +163,19 @@ async def get_message_reactions(message: telethon.types.Message, dialog_peer: te
     :return: dict of "user_id - reaction emoji" pairs
     """
     try:
-        result = await client(telethon.functions.messages.GetMessageReactionsListRequest(
-            peer=dialog_peer,
-            id=message.id,
-            limit=REACTIONS_LIMIT_PER_MESSAGE,
-        ))
+        result = await client(
+            telethon.functions.messages.GetMessageReactionsListRequest(
+                peer=dialog_peer,
+                id=message.id,
+                limit=REACTIONS_LIMIT_PER_MESSAGE,
+            )
+        )
 
         reaction_objects = result.reactions
-        reactions = {reaction_object.peer_id.user_id: reaction_object.reaction for reaction_object in reaction_objects}
+        reactions = {
+            reaction_object.peer_id.user_id: reaction_object.reaction
+            for reaction_object in reaction_objects
+        }
 
     except telethon.errors.rpcerrorlist.MsgIdInvalidError:
         reactions = {}
@@ -156,155 +185,144 @@ async def get_message_reactions(message: telethon.types.Message, dialog_peer: te
 
     return reactions
 
-async def download_dialog(client, id, MSG_LIMIT, config):
-    """
-    Download messages and their metadata for a specific dialog id,
-    and save them in *ID*.csv
 
-    :return: None
-    """
+async def download_dialog(
+    client, id, MSG_LIMIT, config, skip_progress=False, all_at_once=False
+):
     try:
-        # print(f"client.get_entity({id})")
-
         tg_entity = await client.get_entity(id)
-        messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
     except ValueError:
-        errmsg = f"No such ID found: #{id}"
-        print(errmsg)
+        print(f"No such ID found: #{id}")
+        return
 
+    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
+    all_messages = []
+    offset_id = None
+    batch_size = 10000
+    if all_at_once:
+        batch_size = MSG_LIMIT
+    total_messages = 0
+    newest_id = None
+
+    if (
+        not skip_progress
+        and os.path.exists(dialog_file_path)
+        and os.path.getsize(dialog_file_path) > 0
+    ):
+        print(
+            f"Continuation mode: Found existing CSV for dialog #{id}. Resuming download..."
+        )
+        df = pd.read_csv(dialog_file_path)
+        if not df.empty:
+            df["id"] = pd.to_numeric(df["id"], errors="coerce")
+            df = df.dropna(subset=["id"])
+            df = df.sort_values("id", ascending=False)
+            offset_id = df["id"].min()
+            newest_id = df["id"].max()
+            total_messages = len(df)
+            all_messages = df.to_dict("records")
+        if DEBUG_MODE:
+            print(f"Resuming from message ID: {offset_id}")
+    else:
+        print(f"Continuation mode: Starting fresh download for dialog #{id}...")
+
+    if newest_id is not None:
+        while True:
+            try:
+                print(f"Downloading newer messages starting from ID: {newest_id}")
+                messages = await client.get_messages(
+                    tg_entity, limit=batch_size, min_id=newest_id
+                )
+                if not messages:
+                    break
+
+                new_messages = await process_messages(
+                    messages, telethon.utils.get_peer(id)
+                )
+                all_messages = new_messages + all_messages
+                total_messages += len(new_messages)
+                newest_id = max(m["id"] for m in new_messages)
+
+                print(
+                    f"Downloaded {len(new_messages)} new messages. Total: {total_messages}"
+                )
+
+                save_progress(all_messages, dialog_file_path)
+            except Exception as e:
+                print(f"Error occurred while downloading newer messages: {str(e)}")
+                break
+
+    while total_messages < MSG_LIMIT:
         try:
-            print("Trying to init through username")
+            print(
+                f"Downloading older messages {'starting from message ID: ' + str(offset_id) if offset_id else 'from the beginning'}"
+            )
+            if offset_id is None:
+                messages = await client.get_messages(
+                    tg_entity, limit=min(batch_size, MSG_LIMIT - total_messages)
+                )
+            else:
+                messages = await client.get_messages(
+                    tg_entity,
+                    limit=min(batch_size, MSG_LIMIT - total_messages),
+                    offset_id=offset_id,
+                )
 
-            username = None
-            dialog_data_json = f'{config["dialogs_list_folder"]}/{id}.json'
+            if not messages:
+                break
+            new_messages = await process_messages(messages, telethon.utils.get_peer(id))
+            all_messages.extend(new_messages)
+            total_messages += len(new_messages)
+            if messages:
+                offset_id = min(m["id"] for m in new_messages)
+            print(
+                f"Downloaded {len(new_messages)} older messages. Total: {total_messages}"
+            )
 
-            with open(dialog_data_json) as json_file:
-                dialog_data = json.load(json_file)
+            save_progress(all_messages, dialog_file_path)
 
-                if "users" in dialog_data \
-                        and len(dialog_data["users"]) == 1 \
-                        and "username" in dialog_data["users"][0]:
-                    username = dialog_data["users"][0]["username"]
+        except Exception as e:
+            print(f"Error occurred while downloading older messages: {str(e)}")
+            break
 
-                    print(f"Username: {username}")
+    print(f"Finished downloading. Total messages: {len(all_messages)}")
 
-                    if username:
-                        _ = await client.get_entity(username)
-                        tg_entity = await client.get_entity(id)
-                        messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
 
-                        print(f"Done.")
-                    else:
-                        raise ValueError(errmsg, )
-                else:
-                    print(f"Error for dialog #{id}")
-                    print(dialog_data)
-                    return
-        except ValueError:
-            raise ValueError(errmsg, )
-
-    dialog = []
-
+async def process_messages(messages, dialog_peer):
+    processed_messages = []
     for m in messages:
         msg_attrs = msg_handler(m)
-        msg_reactions = await get_message_reactions(m, telethon.utils.get_peer(id))
+        msg_reactions = await get_message_reactions(m, dialog_peer)
 
-        dialog.append(
+        processed_messages.append(
             {
                 "id": m.id,
                 "date": m.date,
-                "from_id": m.from_id,
+                "from_id": (
+                    m.from_id.user_id
+                    if isinstance(m.from_id, telethon.tl.types.PeerUser)
+                    else None
+                ),
                 "to_id": msg_attrs["to_id"],
-                "fwd_from": m.fwd_from,
+                "fwd_from": (
+                    m.fwd_from.from_id.user_id
+                    if m.fwd_from
+                    and isinstance(m.fwd_from.from_id, telethon.tl.types.PeerUser)
+                    else None
+                ),
                 "message": msg_attrs["message"],
                 "type": msg_attrs["type"],
                 "duration": msg_attrs["duration"],
                 "reactions": msg_reactions,
             }
         )
+    return processed_messages
 
-    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
 
-    df = pd.DataFrame(dialog)
-    df.to_csv(dialog_file_path)
-
-async def download_dialog_within_batches(client, id, MSG_LIMIT, config):
-    """
-    Download messages and their metadata for a specific dialog id,
-    and save them in *ID*.csv. If a CSV already exists,
-    resume from the last message.
-
-    :return: None
-    """
-    try:
-        tg_entity = await client.get_entity(id)
-    except ValueError:
-        errmsg = f"No such ID found: #{id}"
-        print(errmsg)
-        return
-
-    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
-    all_messages = []
-    offset_id = None
-    batch_size = 10000  # Download 10,000 messages at a time
-    total_messages = 0
-
-    if os.path.exists(dialog_file_path) and os.path.getsize(dialog_file_path) > 0:
-        print(f"Continuation mode: Found existing CSV for dialog #{id}. Resuming download...")
-        df = pd.read_csv(dialog_file_path)
-        if not df.empty:
-            last_row = df.iloc[-1]
-            offset_id = last_row['id']
-            total_messages = len(df)
-            all_messages = df.to_dict('records')
-        print(f"Resuming from message ID: {offset_id}")
-    else:
-        print(f"Continuation mode:Starting fresh download for dialog #{id}...")
-
-    while total_messages < MSG_LIMIT:
-        try:
-            print(f"Downloading batch {'starting from message ID: ' + str(offset_id) if offset_id else 'of most recent messages'}")
-            messages = await client.get_messages(tg_entity, limit=min(batch_size, MSG_LIMIT - total_messages), offset_id=offset_id)
-            
-            if not messages:
-                break  # No more messages to fetch
-            
-            new_messages = 0
-            for m in messages:
-                if offset_id and m.id >= offset_id:
-                    continue  # Skip messages we already have
-                
-                msg_attrs = msg_handler(m)
-                msg_reactions = await get_message_reactions(m, telethon.utils.get_peer(id))
-
-                all_messages.append({
-                    "id": m.id,
-                    "date": m.date,
-                    "from_id": m.from_id,
-                    "to_id": msg_attrs["to_id"],
-                    "fwd_from": m.fwd_from,
-                    "message": msg_attrs["message"],
-                    "type": msg_attrs["type"],
-                    "duration": msg_attrs["duration"],
-                    "reactions": msg_reactions,
-                })
-                new_messages += 1
-
-            total_messages += new_messages
-            if messages:
-                offset_id = messages[-1].id
-            print(f"Downloaded {new_messages} new messages. Total: {total_messages}")
-
-            # Save progress after each batch
-            df = pd.DataFrame(all_messages)
-            df.to_csv(dialog_file_path, index=False)
-            print(f"Saved progress to {dialog_file_path}")
-
-        except Exception as e:
-            print(f"Error occurred while downloading batch: {str(e)}")
-            break
-
-    print(f"Finished downloading. Total messages: {len(all_messages)}")
+def save_progress(messages, file_path):
+    df = pd.DataFrame(messages)
+    df.to_csv(file_path, index=False)
+    print(f"Saved progress to {file_path}")
 
 
 if __name__ == "__main__":
@@ -314,17 +332,27 @@ if __name__ == "__main__":
     MSG_LIMIT = msg_limit_input_handler(args.dialog_msg_limit)
     SESSION_NAME = args.session_name
     DEBUG_MODE = args.debug_mode
-    CONTINUATION = args.continuation
+    skip_progress = args.skip_progress
+    all_at_once = args.all_at_once
 
-    is_dialog_type_accepted = {'Private dialog': not args.skip_private,
-                               'Group': not args.skip_groups,
-                               'Channel': not args.skip_channels}
+    is_dialog_type_accepted = {
+        "Private dialog": not args.skip_private,
+        "Group": not args.skip_groups,
+        "Channel": not args.skip_channels,
+    }
 
     config = init_config(CONFIG_PATH)
     dialogs_list = read_dialogs(config["dialogs_list_folder"])
-    client = telethon.TelegramClient(SESSION_NAME, config["api_id"], config["api_hash"], system_version="4.16.30-vxCUSTOM")
+    client = telethon.TelegramClient(
+        SESSION_NAME,
+        config["api_id"],
+        config["api_hash"],
+        system_version="4.16.30-vxCUSTOM",
+    )
 
-    DIALOGS_ID = dialogs_id_input_handler(args.dialogs_ids, is_dialog_type_accepted, dialogs_list)
+    DIALOGS_ID = dialogs_id_input_handler(
+        args.dialogs_ids, is_dialog_type_accepted, dialogs_list
+    )
 
     # Dialogs are the "conversations you have open".
     # This method returns a list of Dialog, which
@@ -341,7 +369,13 @@ if __name__ == "__main__":
         print(f"Loading dialog #{id}")
 
         with client:
-            if(CONTINUATION):
-                client.loop.run_until_complete(download_dialog_within_batches(client, id, MSG_LIMIT, config))
-            else:
-                client.loop.run_until_complete(download_dialog(client, id, MSG_LIMIT, config, CONTINUATION))
+            client.loop.run_until_complete(
+                download_dialog(
+                    client,
+                    id,
+                    MSG_LIMIT,
+                    config,
+                    skip_progress=skip_progress,
+                    all_at_once=all_at_once,
+                )
+            )
