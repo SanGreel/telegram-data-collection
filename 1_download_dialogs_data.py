@@ -189,7 +189,7 @@ async def get_message_reactions(
 async def download_dialog(
     client, id, MSG_LIMIT, config, skip_progress=False, all_at_once=False
 ):
-    tg_entity=None
+    tg_entity = None
     try:
         tg_entity = await client.get_entity(id)
     except ValueError:
@@ -412,7 +412,7 @@ if __name__ == "__main__":
                     id,
                     MSG_LIMIT,
                     config,
-                    skip_progress=SKIP_PROGRESS ,
+                    skip_progress=SKIP_PROGRESS,
                     all_at_once=ALL_AT_ONCE,
                 )
             )
