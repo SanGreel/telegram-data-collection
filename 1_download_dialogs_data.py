@@ -42,9 +42,9 @@ def init_args():
     )
     parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
     parser.add_argument("--session_name", type=str, help="session name", default="tmp")
-    parser.add_argument('--skip_private', action='store_true')
-    parser.add_argument('--skip_groups', action='store_true')
-    parser.add_argument('--skip_channels', action='store_true')
+    parser.add_argument("--skip_private", action="store_true")
+    parser.add_argument("--skip_groups", action="store_true")
+    parser.add_argument("--skip_channels", action="store_true")
     parser.add_argument(
         "--skip_progress",
         action="store_true",
