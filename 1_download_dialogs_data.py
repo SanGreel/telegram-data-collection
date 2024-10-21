@@ -192,7 +192,7 @@ async def download_dialog(
     """
     Download messages and their metadata for a specific dialog id,
     and save them in *ID*.csv
- 
+
     :return: None
     """
     tg_entity = None
@@ -238,8 +238,8 @@ async def download_dialog(
                 errmsg,
             )
 
+    dialog = []
     dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
-    all_messages = []
     offset_id = None
     batch_size = 10000
     if all_at_once:
@@ -263,7 +263,7 @@ async def download_dialog(
             offset_id = df["id"].min()
             newest_id = df["id"].max()
             total_messages = len(df)
-            all_messages = df.to_dict("records")
+            dialog = df.to_dict("records")
         if DEBUG_MODE:
             print(f"Resuming from message ID: {offset_id}")
     else:
@@ -282,7 +282,7 @@ async def download_dialog(
                 new_messages = await process_messages(
                     messages, telethon.utils.get_peer(id)
                 )
-                all_messages = new_messages + all_messages
+                dialog = new_messages + dialog
                 total_messages += len(new_messages)
                 newest_id = max(m["id"] for m in new_messages)
 
@@ -290,7 +290,7 @@ async def download_dialog(
                     f"Downloaded {len(new_messages)} new messages. Total: {total_messages}"
                 )
 
-                save_progress(all_messages, dialog_file_path)
+                save_progress(dialog, dialog_file_path)
             except Exception as e:
                 print(f"Error occurred while downloading newer messages: {str(e)}")
                 break
@@ -314,7 +314,7 @@ async def download_dialog(
             if not messages:
                 break
             new_messages = await process_messages(messages, telethon.utils.get_peer(id))
-            all_messages.extend(new_messages)
+            dialog.extend(new_messages)
             total_messages += len(new_messages)
             if messages:
                 offset_id = min(m["id"] for m in new_messages)
@@ -322,13 +322,13 @@ async def download_dialog(
                 f"Downloaded {len(new_messages)} older messages. Total: {total_messages}"
             )
 
-            save_progress(all_messages, dialog_file_path)
+            save_progress(dialog, dialog_file_path)
 
         except Exception as e:
             print(f"Error occurred while downloading older messages: {str(e)}")
             break
 
-    print(f"Finished downloading. Total messages: {len(all_messages)}")
+    print(f"Finished downloading. Total messages: {len(dialog)}")
 
 
 async def process_messages(messages, dialog_peer):
