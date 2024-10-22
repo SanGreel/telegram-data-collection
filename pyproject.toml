@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "telegram-data-collection"
+version = "0.1.0"
+description = ""
+authors = [
+    "Andrew Kurochkin <sangreel1@gmail.com>",
+    "Andrii Shalaiev <a.shalaev7125@gmail.com>",
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+Telethon = "^1.37.0"
+pandas = "^2.2.3"
+python-decouple = "^3.8"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.28.0"
+ruff = "^0.7.0"
+pytest = "^8.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

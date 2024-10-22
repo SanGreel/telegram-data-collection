@@ -5,6 +5,7 @@ tmp.session
 tmp.session-journal
 
 config/config.json
+.env
 
 .idea/
 
