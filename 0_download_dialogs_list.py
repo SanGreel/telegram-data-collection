@@ -30,8 +30,6 @@ if __name__ == "__main__":
 
     logger.info(f"Downloading dialogs list with {DIALOGS_LIMIT=} and {SESSION_NAME=}")
 
-    breakpoint()
-
     telegram_client = create_telegram_client(SESSION_NAME)
     dialog_downloader = create_dialog_downloader(telegram_client)
 
