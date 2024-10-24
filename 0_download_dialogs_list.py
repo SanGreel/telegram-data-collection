@@ -23,6 +23,7 @@ def init_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = init_args()
+    logger.setLevel(logging.INFO)
 
     DIALOGS_LIMIT = args.dialogs_limit
     DIALOGS_LIMIT = DIALOGS_LIMIT if DIALOGS_LIMIT > 0 else None

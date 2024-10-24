@@ -12,15 +12,23 @@ API_ID = int(config("API_ID", cast=int))
 
 API_HASH = str(config("API_HASH", cast=str))
 
+REACTIONS_LIMIT_PER_MESSAGE = 100
+
+# As Telegram can raise "429 Too Many Requests" error, we need to limit the number of concurrently processed dialogs.
+# In case your download is too slow, you can try to increase this number.
+CONCURRENT_DIALOG_DOWNLOADS = 2
+
 
 # File export paths
 
 DIALOGS_DATA_FOLDER = Path(
-    str(config("DIALOGS_DATA_FOLDER")) or BASE_PATH / "data" / "dialogs_data"
+    str(config("DIALOGS_DATA_FOLDER", default=""))
+    or BASE_PATH / "data" / "dialogs_data"
 ).resolve()
 
 DIALOGS_LIST_FOLDER = Path(
-    str(config("DIALOGS_LIST_FOLDER")) or BASE_PATH / "data" / "dialogs_meta"
+    str(config("DIALOGS_LIST_FOLDER", default=""))
+    or BASE_PATH / "data" / "dialogs_meta"
 ).resolve()
 
 
