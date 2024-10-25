@@ -29,10 +29,10 @@ def init_args():
         help="amount of messages to download from a dialog, -1 for all",
         default=10000,
     )
-    parser.add_argument("--session_name", type=str, help="session name", default="tmp")
-    parser.add_argument("--skip_private", action="store_true")
-    parser.add_argument("--skip_groups", action="store_true")
-    parser.add_argument("--skip_channels", action="store_true")
+    parser.add_argument("--session-name", type=str, help="session name", default="tmp")
+    parser.add_argument("--skip-private", action="store_true")
+    parser.add_argument("--skip-groups", action="store_true")
+    parser.add_argument("--skip-channels", action="store_true")
 
     return parser.parse_args()
 

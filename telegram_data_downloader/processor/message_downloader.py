@@ -1,4 +1,3 @@
-# ruff: noqa: F401
 import asyncio
 import logging
 import typing

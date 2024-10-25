@@ -13,9 +13,17 @@ def init_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Download dialogs list for user.")
 
     parser.add_argument(
-        "--dialogs-limit", type=int, help="number of dialogs", required=True
+        "--dialogs-limit",
+        type=int,
+        help='number of dialogs to download. enter "-1" to download all',
+        required=True,
     )
-    parser.add_argument("--session-name", type=str, help="session name", default="tmp")
+    parser.add_argument(
+        "--session-name",
+        type=str,
+        help="Telegram session storage filename without extension",
+        default="tmp",
+    )
 
     # read arguments from terminal
     return parser.parse_args()
