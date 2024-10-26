@@ -93,8 +93,12 @@ This repo consists of two parts:
     ```
 
     ```bash
-    python 1_download_dialogs_data.py --dialogs-ids -1 --dialog-msg-limit -1
+    python 1_download_dialogs_data.py --dialog-ids -1 --dialog-msg-limit -1
     ```
+
+    <!-- markdownlint-disable-next-line MD038 -->
+    Note: in case you want to provide dialog ids and you need to enter a negative value for chat id, start your value with `" <your values>"` (enter value in quotes and add a whitespace at the start).
+    E.g. `--dialog-ids " -1234567890"`.
 
 ## Contributing
 
