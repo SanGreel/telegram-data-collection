@@ -1,44 +1,107 @@
-# Telegram data collector v0.01
-Combination of tools to download your telegram data.
+# Telegram data collector v0.02
 
+Combination of Python scripts that allow to download data from Telegram, consisting from all dialog metadata (names, members, etc.) and messages from those chats.
 
-### Structure
-##### 0_download_dialogs_list.py
-Download dialogs meta data for account.
+## Structure
 
-`--dialogs_limit`
-number of dialogs
+This repo consists of two parts:
 
-`-h`
-show this help message and exit
+1. ### Main repo Python code
 
-`--config_path`
-path to config file
+    [`telegram_data_downloader`](telegram_data_downloader) directory consists of the main Python code that drive the [scripts](#scripts).
 
-`--debug_mode`
-Debug mode
+    A few words about underlying modules:
 
+    1. [`dict_types`](/telegram_data_downloader/dict_types) contains basic type definitions for the data structures that are used throughout other modules.
 
-##### 1_download_dialogs_data.py
-Download all messages from the dialogs.
+    1. [`loader`](/telegram_data_downloader/loader) contains files to manage reading and writing metadata and message data. Currently this data is exported to local filesystem.
 
-Use flags `--skip_private`, `--skip_groups`, and `--skip_channels`
-to skip private chats, groups, and channels respectively.
+    1. [`processor`](/telegram_data_downloader/processor) contains files to manage the processing and downloading of the data.
 
-### Requirements
-Python 3.8.13
+    1. [`settings`](/telegram_data_downloader/settings.py) is responsible for initializing the settings and configuration for the downloader. It also contains some important constants, about which you can read more in the file itself.
 
+1. ### Scripts
 
-### How to run
-0. create virtual env
-```python -m venv .venv```
-1. activate virtual env
-```. .venv/bin/activate```
-2. install dependencies 
-```pip install -r requirements.txt```
-3. get your credentials https://my.telegram.org/apps
-4. set credentials (api_id, api_hash) in *config/config.json* (can be based on the *config_example.json*)
+    These scripts are the main entrypoint and perform dialog metadata and message downloading.
 
-### How to start
-0. ```python 0_download_dialogs_list.py --dialogs_limit -1```
-1. ```python 1_download_dialogs_data.py --dialogs_ids -1 --dialog_msg_limit -1```
+    There are two scripts:
+
+    1. [`0_download_dialogs_list.py`](/0_download_dialogs_list.py)
+
+        This script downloads the metadata of all dialogs for the account.
+        Run with `-h` to see the available options.
+
+    1. [`1_download_dialogs_data.py`](/1_download_dialogs_data.py)
+
+        This script downloads all messages from the dialogs.
+        Run with `-h` to see the available options.
+
+    We _strongly_ encourage you to read the help of the scripts and visit settings file to understand the available options.
+
+## Requirements
+
+- Python 3.11^
+- pip
+
+## Installation
+
+1. Clone the repository
+
+    ```bash
+    git clone <repo-url>
+    cd telegram-data-collector
+    ```
+
+1. Install package manager used by the project - [Poetry](https://python-poetry.org/)
+
+    ```bash
+    python3.11 -m pip install poetry
+    ```
+
+1. Install dependencies
+
+    ```bash
+    poetry install --without=dev
+    ```
+
+    In case you want to install the virtual environment in current directory and not in the default Poetry location (you can more about it [here](https://python-poetry.org/docs/configuration/#virtualenvsin-project)), you can run:
+
+    ```bash
+    POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --without=dev
+    ```
+
+1. Copy [`.env.sample`](/.env.sample) to `.env` and fill in the required values
+
+    ```bash
+    cp .env.sample .env
+    ```
+
+    For basic usage, you only need to fill in the `API_ID` and `API_HASH` values. These can be obtained from [my.telegram.org](https://my.telegram.org/apps).
+
+## Usage
+
+1. Activate the virtual environment
+
+    ```bash
+    poetry shell
+    ```
+
+1. Run the scripts
+
+    ```bash
+    python 0_download_dialogs_list.py --dialogs-limit -1
+    ```
+
+    ```bash
+    python 1_download_dialogs_data.py --dialog-ids -1 --dialog-msg-limit -1
+    ```
+
+    <!-- markdownlint-disable-next-line MD038 -->
+    Note: in case you want to provide dialog ids and you need to enter a negative value for chat id, start your value with `" <your values>"` (enter value in quotes and add a whitespace at the start).
+    E.g. `--dialog-ids " -1234567890"`.
+
+## Contributing
+
+If you want to contribute to the project, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
+In case you were a part of the project and weren't listed as contributor, please let us know.
