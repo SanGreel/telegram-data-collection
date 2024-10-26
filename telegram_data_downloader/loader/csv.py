@@ -19,6 +19,7 @@ class CSVMessageWriter:
         self, dialog: DialogMetadata, messages: list[MessageAttributes]
     ) -> None:
         df = pd.DataFrame(messages)
+        df["type"] = df["type"].apply(lambda x: x.value)
         write_path = self.output_dir / f"{dialog['id']}.csv"
         df.to_csv(write_path, index=False)
         logger.debug(f"saved messages for {dialog['id']} to {write_path}")
