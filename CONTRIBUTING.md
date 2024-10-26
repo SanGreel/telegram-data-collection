@@ -16,6 +16,7 @@ Thank you for considering contributing to the Telegram Data Collector project! W
 - Use type hints for function signatures and class attributes.
 - Use the default formatter for the project. Currently used is [`ruff`](https://docs.astral.sh/ruff/).
 - Make sure to commit the IDE or editor configuration files to the repository to ensure consistent code formatting across contributors.
+- Add tests for important code paths and edge cases. We use [`pytest`](https://docs.pytest.org/en/stable/) for testing.
 
 ## Programming Patterns
 
@@ -70,6 +71,12 @@ Thank you for considering contributing to the Telegram Data Collector project! W
     poetry shell
     ```
 
+1. Run the tests:
+
+    ```bash
+    pytest -v
+    ```
+
 ## Submitting a Pull Request
 
 1. Fork the repository and create your branch from `master`.
@@ -77,6 +84,7 @@ Thank you for considering contributing to the Telegram Data Collector project! W
 1. Ensure the test suite passes.
 1. Make sure your code lints.
 1. If your code has substantial changes, update the [README.md](/README.md) and [CONTRIBUTING.md](/CONTRIBUTING.md) with details of changes to the interface.
+1. Run the tests and ensure they pass.
 1. Submit a pull request with a clear description of your changes.
 
 <!-- markdownlint-disable-next-line MD026 -->
