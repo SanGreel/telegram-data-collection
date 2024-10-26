@@ -204,17 +204,16 @@ class MessageDownloader:
                 channel = await self.client.get_entity(m.peer_id)
                 assert isinstance(channel, tl_types.Channel)
                 is_broadcast_channel = channel.broadcast
-            if is_broadcast_channel:
+            if not is_broadcast_channel:
                 # * avoid getting reactions for broadcast channels
-                continue
+                peer = typing.cast(
+                    tl_types.TypeInputPeer, telethon.utils.get_peer(dialog["id"])
+                )  # * cast because dialog is tl_types.TypeInputPeer
+                msg_attrs["reactions"] = {
+                    k: v.emoticon
+                    for k, v in (await self._get_message_reactions(m, peer)).items()
+                }
 
-            peer = typing.cast(
-                tl_types.TypeInputPeer, telethon.utils.get_peer(dialog["id"])
-            )  # * cast because dialog is tl_types.TypeInputPeer
-            msg_attrs["reactions"] = {
-                k: v.emoticon
-                for k, v in (await self._get_message_reactions(m, peer)).items()
-            }
             dialog_messages.append(msg_attrs)
 
         self.message_writer.write_messages(dialog, dialog_messages)
