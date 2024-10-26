@@ -7,6 +7,7 @@ import logging
 import json
 
 import telethon
+import asyncio
 
 from utils.utils import init_config, read_dialogs
 
@@ -41,7 +42,8 @@ def init_args():
         default="config/config.json",
     )
     parser.add_argument("--debug_mode", type=int, help="Debug mode", default=0)
-    parser.add_argument("--session_name", type=str, help="session name", default="tmp")
+    parser.add_argument("--session_name", type=str,
+                        help="session name", default="tmp")
     parser.add_argument("--skip_private", action="store_true")
     parser.add_argument("--skip_groups", action="store_true")
     parser.add_argument("--skip_channels", action="store_true")
@@ -68,14 +70,16 @@ def dialogs_id_input_handler(
             if is_dialog_type_accepted[dialog["type"]]
         ]
     elif len(input_id_lst) == 1:
-        provided_ids = [int(dialog_id) for dialog_id in input_id_lst[0].split(",")]
+        provided_ids = [int(dialog_id)
+                        for dialog_id in input_id_lst[0].split(",")]
         return [
             dialog["id"]
             for dialog in dialog_list
             if is_dialog_type_accepted[dialog["type"]] and dialog["id"] in provided_ids
         ]
     elif len(input_id_lst) > 1:
-        provided_ids = [int(dialog_id.replace(",", "")) for dialog_id in input_id_lst]
+        provided_ids = [int(dialog_id.replace(",", ""))
+                        for dialog_id in input_id_lst]
         return [
             dialog["id"]
             for dialog in dialog_list
@@ -185,7 +189,21 @@ async def download_dialog(client, id, MSG_LIMIT, config):
         # print(f"client.get_entity({id})")
 
         tg_entity = await client.get_entity(id)
-        messages = await client.get_messages(tg_entity, limit=MSG_LIMIT)
+
+        # Set a timeout for downloading messages
+        try:
+            messages = await asyncio.wait_for(
+                client.get_messages(tg_entity, limit=MSG_LIMIT),
+                timeout=1800  # Timeout set to (30 minutes)
+            )
+        except asyncio.TimeoutError:
+            print(f"Timeout: Skipping dialog #{id} as it took too long.")
+            return
+
+    # Truncate the list to MSG_LIMIT if it fetched more messages than needed
+        if len(messages) > MSG_LIMIT:
+            messages = messages[:MSG_LIMIT]
+
     except ValueError:
         errmsg = f"No such ID found: #{id}"
         print(errmsg)
@@ -247,7 +265,8 @@ async def download_dialog(client, id, MSG_LIMIT, config):
             }
         )
 
-    dialog_file_path = os.path.join(config["dialogs_data_folder"], f"{str(id)}.csv")
+    dialog_file_path = os.path.join(
+        config["dialogs_data_folder"], f"{str(id)}.csv")
 
     df = pd.DataFrame(dialog)
     df.to_csv(dialog_file_path)
