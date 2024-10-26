@@ -16,7 +16,9 @@ REACTIONS_LIMIT_PER_MESSAGE = 100
 
 # As Telegram can raise "429 Too Many Requests" error, we need to limit the number of concurrently processed dialogs.
 # In case your download is too slow, you can try to increase this number.
-CONCURRENT_DIALOG_DOWNLOADS = 2
+CONCURRENT_DIALOG_DOWNLOADS = int(
+    config("CONCURRENT_DIALOG_DOWNLOADS", cast=int, default=5)
+)
 
 
 # File export paths
