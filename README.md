@@ -67,7 +67,7 @@ This repo consists of two parts:
     In case you want to install the virtual environment in current directory and not in the default Poetry location (you can more about it [here](https://python-poetry.org/docs/configuration/#virtualenvsin-project)), you can run:
 
     ```bash
-    POETRY_VIRTUALENVS_IN_PROJECT=True poetry install --without=dev
+    POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --without=dev
     ```
 
 1. Copy [`.env.sample`](/.env.sample) to `.env` and fill in the required values

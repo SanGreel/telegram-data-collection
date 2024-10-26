@@ -53,7 +53,7 @@ Thank you for considering contributing to the Telegram Data Collector project! W
     In case you want to install the virtual environment in the current directory and not in the default Poetry location, you can run:
 
     ```bash
-    POETRY_VIRTUALENVS_IN_PROJECT=True poetry install
+    POETRY_VIRTUALENVS_IN_PROJECT=true poetry install
     ```
 
 1. Copy the [.env.sample](/.env.sample) and fill in the required values:
