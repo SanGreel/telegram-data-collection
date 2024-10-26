@@ -1,4 +1,3 @@
-import logging
 import argparse
 from typing import Callable
 
@@ -8,9 +7,6 @@ from telegram_data_downloader.factory import (
     create_message_downloader,
     create_telegram_client,
 )
-
-
-logger = logging.getLogger(__name__)
 
 
 def init_args():
@@ -61,8 +57,7 @@ def filter_input_dialogs(
 
 
 if __name__ == "__main__":
-    logger.setLevel(logging.INFO)
-    logger.info("start downloading dialogs...")
+    print("start downloading dialogs...")
 
     args = init_args()
 
@@ -74,24 +69,22 @@ if __name__ == "__main__":
         DialogType.GROUP: not args.skip_groups,
         DialogType.CHANNEL: not args.skip_channels,
     }
-    logger.info(f"dialog types to download: {is_dialog_type_accepted}")
+    print(f"dialog types to download: {is_dialog_type_accepted}")
 
     dialog_reader = create_json_dialog_reader_writer()
     dialogs = dialog_reader.read_all_dialogs()
-    logger.info(f"total dialogs: {len(dialogs)}")
+    print(f"total dialogs: {len(dialogs)}")
     filtered_dialogs = filter_input_dialogs(
         args.dialog_ids, is_dialog_type_accepted, dialogs
     )
-    logger.info(f"total filtered dialogs: {len(filtered_dialogs)}")
+    print(f"total filtered dialogs: {len(filtered_dialogs)}")
 
     client = create_telegram_client(SESSION_NAME)
     message_downloader = create_message_downloader(client)
 
-    breakpoint()
-
-    logger.info("downloading dialogs...")
+    print("downloading dialogs...")
     with client:
         client.loop.run_until_complete(
             message_downloader.download_dialogs(filtered_dialogs, MSG_LIMIT)
         )
-    logger.info("dialogs downloaded")
+    print("dialogs downloaded")

@@ -1,12 +1,9 @@
 import argparse
-import logging
 
 from telegram_data_downloader.factory import (
     create_dialog_downloader,
     create_telegram_client,
 )
-
-logger = logging.getLogger(__name__)
 
 
 def init_args() -> argparse.Namespace:
@@ -31,13 +28,12 @@ def init_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = init_args()
-    logger.setLevel(logging.INFO)
 
     DIALOGS_LIMIT = args.dialogs_limit
     DIALOGS_LIMIT = DIALOGS_LIMIT if DIALOGS_LIMIT > 0 else None
     SESSION_NAME = args.session_name
 
-    logger.info(f"Downloading dialogs list with {DIALOGS_LIMIT=} and {SESSION_NAME=}")
+    print(f"Downloading dialogs list with {DIALOGS_LIMIT=} and {SESSION_NAME=}")
 
     telegram_client = create_telegram_client(SESSION_NAME)
     dialog_downloader = create_dialog_downloader(telegram_client)
@@ -48,4 +44,4 @@ if __name__ == "__main__":
             dialog_downloader.save_dialogs(DIALOGS_LIMIT)
         )
 
-    logger.info("Dialogs list downloaded successfully")
+    print("Dialogs list downloaded successfully")

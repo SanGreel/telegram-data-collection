@@ -27,7 +27,7 @@ class JSONDialogReaderWriter:
     def read_all_dialogs(self) -> list[DialogMetadata]:
         dialog_ids = [int(path.stem) for path in self.list_dir.glob("*.json")]
         dialogs = [self.read_dialog(dialog_id) for dialog_id in dialog_ids]
-        logger.info(f"loaded {len(dialogs)} dialogs")
+        logger.debug(f"loaded {len(dialogs)} dialogs")
         return dialogs
 
     def write_dialog(self, data: DialogMetadata) -> None:
@@ -38,4 +38,4 @@ class JSONDialogReaderWriter:
         write_path = self.list_dir / f"{data['id']}.json"
         with open(write_path, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=4, ensure_ascii=False)
-        logger.info(f"saved #{data['id']} to {write_path}")
+        logger.debug(f"saved #{data['id']} to {write_path}")

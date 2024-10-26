@@ -21,4 +21,4 @@ class CSVMessageWriter:
         df = pd.DataFrame(messages)
         write_path = self.output_dir / f"{dialog['id']}.csv"
         df.to_csv(write_path, index=False)
-        logger.info(f"saved messages for {dialog['id']} to {write_path}")
+        logger.debug(f"saved messages for {dialog['id']} to {write_path}")

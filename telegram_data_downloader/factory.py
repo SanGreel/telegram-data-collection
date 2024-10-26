@@ -1,3 +1,5 @@
+import logging
+
 import telethon
 
 from . import settings
@@ -7,7 +9,11 @@ from .processor.dialog_downloader import DialogDownloader
 from .processor.message_downloader import MessageDownloader
 
 
+logger = logging.getLogger(__name__)
+
+
 def create_telegram_client(session_name: str) -> telethon.TelegramClient:
+    logger.debug("creating telegram client...")
     return telethon.TelegramClient(
         session_name,
         settings.API_ID,
@@ -27,12 +33,14 @@ def create_csv_message_saver() -> CSVMessageWriter:
 def create_dialog_downloader(
     telegram_client: telethon.TelegramClient,
 ) -> DialogDownloader:
+    logger.debug("creating dialog downloader...")
     return DialogDownloader(telegram_client, create_json_dialog_reader_writer())
 
 
 def create_message_downloader(
     telegram_client: telethon.TelegramClient,
 ) -> MessageDownloader:
+    logger.debug("creating message downloader...")
     downloader = MessageDownloader(
         telegram_client,
         create_json_dialog_reader_writer(),

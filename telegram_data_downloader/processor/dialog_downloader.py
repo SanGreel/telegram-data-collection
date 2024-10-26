@@ -3,8 +3,8 @@ import logging
 import typing
 
 import telethon
-from telethon.tl.custom.dialog import Dialog
-from telethon.tl.types import User
+from telethon.tl import custom as tl_custom
+from telethon.tl import types as tl_types
 
 from ..dict_types.dialog import DialogMemberData, DialogMetadata, DialogType
 
@@ -25,13 +25,15 @@ class DialogDownloader:
         self.client = telegram_client
 
     async def save_dialogs(self, dialogs_limit: int | None) -> bool:
-        logger.debug("saving dialogs list...")
-        dialogs: list[Dialog] = await self.client.get_dialogs(limit=dialogs_limit)
-        logger.debug(f"found {len(dialogs)} dialogs")
+        logger.debug("retrieving dialog list...")
+        dialogs: list[tl_custom.Dialog] = await self.client.get_dialogs(
+            limit=dialogs_limit
+        )
+        logger.info(f"found {len(dialogs)} dialogs")
 
         tasks = []
         # * process each dialog asynchronously, therefore increasing throughput
-        for dialog in typing.cast(list[Dialog], dialogs):
+        for dialog in typing.cast(list[tl_custom.Dialog], dialogs):
             task = asyncio.create_task(self._save_dialog(dialog))
             tasks.append(task)
 
@@ -40,12 +42,12 @@ class DialogDownloader:
         logger.info("dialogs list saved successfully")
         return True
 
-    async def _save_dialog(self, dialog: Dialog):
+    async def _save_dialog(self, dialog: tl_custom.Dialog):
         dialog_id = dialog.id
         dialog_name = dialog.name
         dialog_members: list[DialogMemberData] = []
 
-        logger.info(f"processing dialog #{dialog_id}...")
+        logger.info(f"dialog #{dialog_id}: starting processing...")
 
         type_to_enum = {
             dialog.is_user: DialogType.PRIVATE,
@@ -63,19 +65,27 @@ class DialogDownloader:
         # elif dialog.is_channel:
         #     dialog_type = "Channel"
 
-        logger.debug(f"getting participants for dialog #{dialog_id}...")
+        logger.debug(f"dialog #{dialog_id}: getting participants...")
         try:
-            users: list[User] = await self.client.get_participants(dialog)
+            users: list[tl_types.User] = await self.client.get_participants(dialog)
         except telethon.errors.ChatAdminRequiredError as e:
-            logger.error(f"getting dialog participants: admin required: {e}")
+            logger.error(
+                f"dialog #{dialog_id}: getting participants: admin required: {e}"
+            )
         except telethon.errors.ChannelPrivateError as e:
-            logger.error(f"getting dialog participants: channel private: {e}")
+            logger.error(
+                f"dialog #{dialog_id}: getting participants: channel private: {e}"
+            )
         except telethon.errors.ChannelInvalidError as e:
-            logger.error(f"getting dialog participants: channel invalid: {e}")
+            logger.error(
+                f"dialog #{dialog_id}: getting participants: channel invalid: {e}"
+            )
         except telethon.errors.RPCError as e:
-            logger.error(f"getting dialog participants: unknown error: {e}")
+            logger.error(
+                f"dialog #{dialog_id}: getting participants: unknown error: {e}"
+            )
         else:
-            logger.debug("processing dialog participants...")
+            logger.debug(f"dialog #{dialog_id}: processing participants...")
             dialog_members = [
                 DialogMemberData(
                     user_id=user.id,
@@ -96,3 +106,5 @@ class DialogDownloader:
                 users=dialog_members,
             )
         )
+
+        logger.info(f"dialog #{dialog_id}: successfully saved")
