@@ -4,6 +4,7 @@ import typing
 
 import telethon
 from telethon.tl import types as tl_types
+from telethon.tl.custom.message import Message as TLMessage
 
 from ..dict_types.dialog import DialogMetadata
 from ..dict_types.message import MessageAttributes, MessageType, PeerID
@@ -46,7 +47,7 @@ class MessageDownloader:
     def concurrent_dialog_downloads(self, value: int) -> None:
         self._semaphore = asyncio.Semaphore(value)
 
-    def _reformat_message(self, message: tl_types.Message) -> MessageAttributes:
+    def _reformat_message(self, message: TLMessage) -> MessageAttributes:
         fwd_from = (
             telethon.utils.get_peer_id(message.fwd_from.from_id)
             if message.fwd_from and message.fwd_from.from_id
@@ -61,14 +62,10 @@ class MessageDownloader:
             "date": message.date,
             "from_id": PeerID(from_id) if from_id else None,
             "fwd_from": PeerID(fwd_from) if fwd_from else None,
-            "message": message.message,
+            "message": message.message or "",
             "type": MessageType.TEXT,
             "duration": None,
-            "to_id": (
-                PeerID(telethon.utils.get_peer_id(message.peer_id))
-                if message.peer_id
-                else None
-            ),
+            "to_id": PeerID(telethon.utils.get_peer_id(message.to_id)),
             "reactions": {},
         }
 
@@ -108,7 +105,7 @@ class MessageDownloader:
         max_tries=5,
     )
     async def _get_message_reactions(
-        self, message: tl_types.Message, dialog_peer: tl_types.TypeInputPeer
+        self, message: TLMessage, dialog_peer: tl_types.TypeInputPeer
     ) -> dict[PeerID, tl_types.ReactionEmoji]:
         try:
             result: tl_types.messages.MessageReactionsList = await self.client(
@@ -138,12 +135,12 @@ class MessageDownloader:
 
     async def _get_message_iterator(
         self, dialog: DialogMetadata, msg_limit: int
-    ) -> typing.AsyncIterator[tl_types.Message]:
+    ) -> typing.AsyncIterator[TLMessage]:
         logger.debug(f"dialog #{dialog['id']}: creating message iterator")
         try:
             tg_entity = await self.client.get_entity(dialog["id"])
-        except ValueError:
-            logger.error(f"dialog #{dialog['id']}: no such ID found")
+        except ValueError as e:
+            logger.error(f"dialog #{dialog['id']}: {e}")
             logger.info(f"init dialog {dialog['id']} through member username")
 
             username = None
