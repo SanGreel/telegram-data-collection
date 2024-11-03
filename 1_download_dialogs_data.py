@@ -1,6 +1,8 @@
 import argparse
 from typing import Callable
 
+import telethon
+
 from telegram_data_downloader.dict_types.dialog import DialogMetadata, DialogType
 from telegram_data_downloader.factory import (
     create_json_dialog_reader_writer,
@@ -80,11 +82,29 @@ if __name__ == "__main__":
     print(f"total filtered dialogs: {len(filtered_dialogs)}")
 
     client = create_telegram_client(SESSION_NAME)
-    message_downloader = create_message_downloader(client)
-
     print("downloading dialogs...")
     with client:
-        client.loop.run_until_complete(
-            message_downloader.download_dialogs(filtered_dialogs, MSG_LIMIT)
-        )
+        try:
+            with client.takeout(
+                finalize=True,
+                contacts=False,
+                users=True,
+                chats=True,
+                megagroups=True,
+                channels=True,
+                files=False,
+            ) as takeout:
+                message_downloader = create_message_downloader(takeout)
+                takeout.loop.run_until_complete(
+                    message_downloader.download_dialogs(filtered_dialogs, MSG_LIMIT)
+                )
+        except telethon.errors.TakeoutInitDelayError as e:
+            print(
+                "\nWhen initiating a `takeout` session, Telegram requires a cooling period between data exports.\n"
+                f"Initial message: {e}\n"
+                "Workaround: You can allow takeout by:\n"
+                "1. Opening Telegram service notifications (where you retrieved the login code)\n"
+                '2. Click allow on "Data export request"\n'
+            )
+            raise SystemExit(1)
     print("dialogs downloaded")
