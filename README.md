@@ -18,7 +18,10 @@ path to config file
 `--debug_mode`
 Debug mode
 
-
+`--skip_progress`
+Download all messages from scratch, ignoring any previously downloaded data. If not set, the script will check for existing `.csv` files in the `../data/dialogs` folder. It will then download any new messages since the last download, followed by older messages starting from the oldest message in the existing CSV file.
+`--all_at_once`
+Download all messages all at once instead of in batches of 10,000 messages
 ##### 1_download_dialogs_data.py
 Download all messages from the dialogs.
 
