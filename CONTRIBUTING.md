@@ -14,7 +14,9 @@ Thank you for considering contributing to the Telegram Data Collector project! W
 
 - Follow PEP 8 guidelines for Python code.
 - Use type hints for function signatures and class attributes.
-- Use the default formatter for the project. Currently used is [`ruff`](https://docs.astral.sh/ruff/).
+- We use two formatters:
+    1. The main formatter for basic development is [`ruff`](https://docs.astral.sh/ruff/).
+    1. For enhanced formatting, at the end of the development, we use [`pylint`](https://pylint.pycqa.org/en/latest/).
 - Make sure to commit the IDE or editor configuration files to the repository to ensure consistent code formatting across contributors.
 - Add tests for important code paths and edge cases. We use [`pytest`](https://docs.pytest.org/en/stable/) for testing.
 
@@ -77,6 +79,22 @@ Thank you for considering contributing to the Telegram Data Collector project! W
     pytest -v
     ```
 
+    If you want to run test coverage, you can use:
+
+    ```bash
+    pytest --cov=telegram_data_downloader
+    ```
+
+1. After making all your changes, run `ruff` and `pylint` for format validation:
+
+    ```bash
+    ruff
+    ```
+
+    ```bash
+    pylint telegram_data_downloader
+    ```
+
 ## Submitting a Pull Request
 
 1. Fork the repository and create your branch from `master`.
@@ -84,7 +102,8 @@ Thank you for considering contributing to the Telegram Data Collector project! W
 1. Ensure the test suite passes.
 1. Make sure your code lints.
 1. If your code has substantial changes, update the [README.md](/README.md) and [CONTRIBUTING.md](/CONTRIBUTING.md) with details of changes to the interface.
-1. Run the tests and ensure they pass.
+1. Run the tests and ensure they pass. Try to reach the highest coverage possible.
+1. Format your code with `ruff` and `pylint`.
 1. Submit a pull request with a clear description of your changes.
 
 <!-- markdownlint-disable-next-line MD026 -->
