@@ -1,0 +1,7 @@
+{
+    "pylint.enabled": true,
+    "cSpell.words": [
+        "megagroup",
+        "megagroups",
+    ]
+}

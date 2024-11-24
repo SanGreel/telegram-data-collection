@@ -1,3 +1,8 @@
+"""
+This script is a Shell entrypoint, used for invoking classes for fetching the list of dialogs
+from Telegram.
+"""
+
 import argparse
 
 from telegram_data_downloader.factory import (
@@ -7,6 +12,9 @@ from telegram_data_downloader.factory import (
 
 
 def init_args() -> argparse.Namespace:
+    """
+    Parse command line arguments for the script and return them.
+    """
     parser = argparse.ArgumentParser(description="Download dialogs list for user.")
 
     parser.add_argument(
@@ -22,7 +30,6 @@ def init_args() -> argparse.Namespace:
         default="tmp",
     )
 
-    # read arguments from terminal
     return parser.parse_args()
 
 

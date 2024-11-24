@@ -18,7 +18,7 @@ def create_telegram_client(session_name: str) -> telethon.TelegramClient:
         session_name,
         settings.API_ID,
         settings.API_HASH,
-        system_version="4.16.30-vxCUSTOM",
+        system_version=settings.CLIENT_SYSTEM_VERSION,
     )
 
 

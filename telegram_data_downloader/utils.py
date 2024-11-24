@@ -1,9 +1,7 @@
 import asyncio
 import functools
 import logging
-from typing import Any, Callable, Optional, Tuple, Type, TypeVar, Union
-
-T = TypeVar("T")
+from typing import Any, Callable, Optional, Tuple, Type, Union
 
 
 logger = logging.getLogger(__name__)
@@ -35,8 +33,11 @@ def async_retry(
 
                     sleep_time = base_sleep_time * (2**try_number)
                     logger.error(
-                        f"attempt {try_number + 1}/{max_tries} failed with {e.__class__.__name__}. "
-                        f"Retrying in {sleep_time:.2f} seconds..."
+                        "attempt %d/%d failed with %s. Retrying in %.2f seconds...",
+                        try_number + 1,
+                        max_tries,
+                        e.__class__.__name__,
+                        sleep_time,
                     )
                     await asyncio.sleep(sleep_time)
 

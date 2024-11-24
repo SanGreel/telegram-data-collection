@@ -11,25 +11,40 @@ from ..dict_types.dialog import DialogMemberData, DialogMetadata, DialogType
 logger = logging.getLogger(__name__)
 
 
-class DialogSaver(typing.Protocol):
+class DialogWriter(typing.Protocol):
     def write_dialog(self, data: DialogMetadata) -> None: ...
 
 
 class DialogDownloader:
+    """
+    Class for downloading and saving metadata of all user's dialogs.
+
+    Attributes:
+        telegram_client (telethon.TelegramClient): Telegram client for fetching the dialogs
+        dialog_writer (DialogWriter): Dialog writer for saving the dialogs
+    """
+
     def __init__(
         self,
         telegram_client: telethon.TelegramClient,
-        dialog_saver: DialogSaver,
+        dialog_writer: DialogWriter,
     ):
-        self.dialog_saver = dialog_saver
+        self.dialog_writer = dialog_writer
         self.client = telegram_client
 
     async def save_dialogs(self, dialogs_limit: int | None) -> bool:
+        """
+        Based on the `dialogs_limit`, fetch the dialogs from the Telegram client,
+        and save them using `dialog_saver`.
+
+        Returns:
+            bool: if the save was successful
+        """
         logger.debug("retrieving dialog list...")
         dialogs: list[tl_custom.Dialog] = await self.client.get_dialogs(
             limit=dialogs_limit
         )
-        logger.info(f"found {len(dialogs)} dialogs")
+        logger.info("found %d dialogs", len(dialogs))
 
         tasks = []
         # * process each dialog asynchronously, therefore increasing throughput
@@ -47,7 +62,7 @@ class DialogDownloader:
         dialog_name = dialog.name
         dialog_members: list[DialogMemberData] = []
 
-        logger.info(f"dialog #{dialog_id}: starting processing...")
+        logger.info("dialog #%d: starting processing...", dialog_id)
 
         type_to_enum = {
             dialog.is_user: DialogType.PRIVATE,
@@ -56,36 +71,27 @@ class DialogDownloader:
         }
         dialog_type = type_to_enum.get(True, DialogType.UNKNOWN)
 
-        # TODO: remember prev dialog type
-        # dialog_type = ""
-        # if dialog.is_user:
-        #     dialog_type = "Private dialog"
-        # elif dialog.is_group:
-        #     dialog_type = "Group"
-        # elif dialog.is_channel:
-        #     dialog_type = "Channel"
-
-        logger.debug(f"dialog #{dialog_id}: getting participants...")
+        logger.debug("dialog #%d: getting participants...", dialog_id)
         try:
             users: list[tl_types.User] = await self.client.get_participants(dialog)
         except telethon.errors.ChatAdminRequiredError as e:
             logger.error(
-                f"dialog #{dialog_id}: getting participants: admin required: {e}"
+                "dialog #%d: getting participants: admin required: %s", dialog_id, e
             )
         except telethon.errors.ChannelPrivateError as e:
             logger.error(
-                f"dialog #{dialog_id}: getting participants: channel private: {e}"
+                "dialog #%d: getting participants: channel private: %s", dialog_id, e
             )
         except telethon.errors.ChannelInvalidError as e:
             logger.error(
-                f"dialog #{dialog_id}: getting participants: channel invalid: {e}"
+                "dialog #%d: getting participants: channel invalid: %s", dialog_id, e
             )
         except telethon.errors.RPCError as e:
             logger.error(
-                f"dialog #{dialog_id}: getting participants: unknown error: {e}"
+                "dialog #%d: getting participants: unknown error: %s", dialog_id, e
             )
         else:
-            logger.debug(f"dialog #{dialog_id}: processing participants...")
+            logger.debug("dialog #%d: processing participants...", dialog_id)
             dialog_members = [
                 DialogMemberData(
                     user_id=user.id,
@@ -98,7 +104,7 @@ class DialogDownloader:
                 if user.username is not None
             ]  # * list comprehension is generally faster than for loop
 
-        self.dialog_saver.write_dialog(
+        self.dialog_writer.write_dialog(
             DialogMetadata(
                 id=dialog_id,
                 name=dialog_name,
@@ -107,4 +113,4 @@ class DialogDownloader:
             )
         )
 
-        logger.info(f"dialog #{dialog_id}: successfully saved")
+        logger.info("dialog #%d: successfully saved", dialog_id)

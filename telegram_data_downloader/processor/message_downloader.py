@@ -6,6 +6,7 @@ import telethon
 from telethon.tl import types as tl_types
 from telethon.tl.custom.message import Message as TLMessage
 
+from .. import settings
 from ..dict_types.dialog import DialogMetadata
 from ..dict_types.message import MessageAttributes, MessageType, PeerID
 from ..utils import async_retry
@@ -25,6 +26,18 @@ class MessageWriter(typing.Protocol):
 
 
 class MessageDownloader:
+    """
+    Class for downloading and saving messages from user's dialogs.
+
+    For detailed info on message data structure, see `MessageAttributes` class.
+
+    Attributes:
+        client (telethon.TelegramClient): Telegram client for fetching the messages
+        dialog_reader (DialogReader): Dialog reader for reading the dialogs
+        message_writer (MessageWriter): Message writer for saving the messages
+        reactions_limit_per_message (int): maximum amount of reactions to fetch per message
+    """
+
     def __init__(
         self,
         client: telethon.TelegramClient,
@@ -41,7 +54,10 @@ class MessageDownloader:
 
     @property
     def concurrent_dialog_downloads(self) -> int:
-        return self._semaphore._value
+        """
+        Current number of dialogs, that will be processed concurrently during download.
+        """
+        return self._semaphore._value  # pylint: disable=protected-access
 
     @concurrent_dialog_downloads.setter
     def concurrent_dialog_downloads(self, value: int) -> None:
@@ -82,12 +98,12 @@ class MessageDownloader:
                         msg_attributes["type"] = MessageType.STICKER
                         break
 
-                    elif isinstance(attribute, tl_types.DocumentAttributeVideo):
+                    if isinstance(attribute, tl_types.DocumentAttributeVideo):
                         msg_attributes["duration"] = attribute.duration
                         msg_attributes["type"] = MessageType.VIDEO
                         break
 
-                    elif (
+                    if (
                         isinstance(attribute, tl_types.DocumentAttributeAudio)
                         and attribute.voice
                     ):
@@ -101,8 +117,8 @@ class MessageDownloader:
 
     @async_retry(
         telethon.errors.common.InvalidBufferError,
-        base_sleep_time=5.0,
-        max_tries=5,
+        base_sleep_time=settings.MESSAGE_REACTION_EXPONENTIAL_BACKOFF_SLEEP_TIME,
+        max_tries=settings.MESSAGE_REACTION_EXPONENTIAL_BACKOFF_MAX_TRIES,
     )
     async def _get_message_reactions(
         self, message: TLMessage, dialog_peer: tl_types.TypeInputPeer
@@ -136,18 +152,18 @@ class MessageDownloader:
     async def _get_message_iterator(
         self, dialog: DialogMetadata, msg_limit: int
     ) -> typing.AsyncIterator[TLMessage]:
-        logger.debug(f"dialog #{dialog['id']}: creating message iterator")
+        logger.debug("dialog #%d: creating message iterator", dialog["id"])
         try:
             tg_entity = await self.client.get_entity(dialog["id"])
         except ValueError as e:
-            logger.error(f"dialog #{dialog['id']}: {e}")
-            logger.info(f"init dialog {dialog['id']} through member username")
+            logger.error("dialog #%d: %s", dialog["id"], e)
+            logger.info("init dialog %d through member username", dialog["id"])
 
             username = None
             try:
                 dialog_metadata = self.dialog_reader.read_dialog(dialog["id"])
             except FileNotFoundError:
-                logger.error(f"dialog #{dialog['id']}: not found")
+                logger.error("dialog #%d: not found", dialog["id"])
                 raise
 
             if (
@@ -157,19 +173,19 @@ class MessageDownloader:
             ):
                 username = dialog_metadata["users"][0]["username"]
             else:
-                logger.error(f"dialog #{dialog['id']}: not a private chat")
+                logger.error("dialog #%d: not a private chat", dialog["id"])
                 return
 
             if not username:
                 # * user found, but username is empty
                 logger.error(
-                    f"dialog #{dialog['id']}: single user found, but username is empty"
+                    "dialog #%d: single user found, but username is empty", dialog["id"]
                 )
-                raise ValueError("username is empty")
+                raise ValueError("username is empty") from e
 
             tg_entity = await self.client.get_input_entity(username)
-        except Exception as e:
-            logger.error(f"dialog #{dialog['id']}: {e}")
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("dialog #%d: %s", dialog["id"], e)
             return
 
         if isinstance(tg_entity, list):
@@ -180,7 +196,7 @@ class MessageDownloader:
             yield message
 
     async def _download_dialog(self, dialog: DialogMetadata, msg_limit: int) -> None:
-        logger.info(f"dialog #{dialog['id']}: downloading messages...")
+        logger.info("dialog #%d: downloading messages...", dialog["id"])
         dialog_messages: list[MessageAttributes] = []
 
         is_broadcast_channel: bool | None = None
@@ -190,7 +206,7 @@ class MessageDownloader:
             msg_count += 1
             if msg_count % 1000 == 0:
                 logger.debug(
-                    f"dialog #{dialog['id']}: processing message number {msg_count}"
+                    "dialog #%d: processing message number %d", dialog["id"], msg_count
                 )
 
             msg_attrs = self._reformat_message(m)
@@ -214,7 +230,7 @@ class MessageDownloader:
             dialog_messages.append(msg_attrs)
 
         self.message_writer.write_messages(dialog, dialog_messages)
-        logger.info(f"dialog #{dialog['id']}: messages downloaded")
+        logger.info("dialog #%d: messages downloaded", dialog["id"])
 
     async def _semaphored_download_dialog(self, *args, **kwargs):
         async with self._semaphore:
@@ -223,10 +239,15 @@ class MessageDownloader:
     async def download_dialogs(
         self, dialogs: list[DialogMetadata], msg_limit: int
     ) -> None:
-        logger.info(f"downloading messages from {len(dialogs)} dialogs...")
+        """
+        Provided a `dialogs` list, download messages from each dialog and save them.
+
+        Specify the maximum number of messages to download per dialog with `msg_limit`.
+        """
+        logger.info("downloading messages from %d dialogs...", len(dialogs))
         tasks = []
         for dialog in dialogs:
-            # TODO: up for debate: move semaphored download to a separate entity, possibly a decorator
+            # TODO: up for debate: move semaphored download to a decorator
             tasks.append(self._semaphored_download_dialog(dialog, msg_limit))
         await asyncio.gather(*tasks)
         logger.info("all dialogs downloaded")
