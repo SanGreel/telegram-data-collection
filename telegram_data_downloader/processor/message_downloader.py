@@ -64,6 +64,9 @@ class MessageDownloader:
         self._semaphore = asyncio.Semaphore(value)
 
     def _reformat_message(self, message: TLMessage) -> MessageAttributes:
+        """
+        Reformat a single message to a more convenient data structure.
+        """
         fwd_from = (
             telethon.utils.get_peer_id(message.fwd_from.from_id)
             if message.fwd_from and message.fwd_from.from_id
@@ -123,6 +126,17 @@ class MessageDownloader:
     async def _get_message_reactions(
         self, message: TLMessage, dialog_peer: tl_types.TypeInputPeer
     ) -> dict[PeerID, tl_types.ReactionEmoji]:
+        """
+        Get reactions for a single message.
+
+        Args:
+            message (TLMessage): message to get reactions for
+            dialog_peer (tl_types.TypeInputPeer): dialog to get the reactions from
+                This is required because message id is relative to the dialog.
+
+        Returns:
+            dict[PeerID, tl_types.ReactionEmoji]
+        """
         try:
             result: tl_types.messages.MessageReactionsList = await self.client(
                 telethon.functions.messages.GetMessageReactionsListRequest(
@@ -132,10 +146,10 @@ class MessageDownloader:
                 )
             )  # type: ignore
         except telethon.errors.BroadcastForbiddenError:
-            # logger.debug("channel is broadcast: cannot retrieve reactions from message")
+            logger.debug("channel is broadcast: cannot retrieve reactions from message")
             reactions = {}
         except telethon.errors.MsgIdInvalidError:
-            # logger.debug(f"message {message.id} not found")
+            # logger.debug("message %d not found", message.id)
             reactions = {}
         else:
             reaction_objects = result.reactions
@@ -152,6 +166,11 @@ class MessageDownloader:
     async def _get_message_iterator(
         self, dialog: DialogMetadata, msg_limit: int
     ) -> typing.AsyncIterator[TLMessage]:
+        """
+        Utility function to get an async iterator of messages from a dialog.
+        We can't use plain `TelegramClient.iter_messages` method, because there can be caveats.
+        """
+
         logger.debug("dialog #%d: creating message iterator", dialog["id"])
         try:
             tg_entity = await self.client.get_entity(dialog["id"])
@@ -196,6 +215,9 @@ class MessageDownloader:
             yield message
 
     async def _download_dialog(self, dialog: DialogMetadata, msg_limit: int) -> None:
+        """
+        Download messages from a single dialog and save them.
+        """
         logger.info("dialog #%d: downloading messages...", dialog["id"])
         dialog_messages: list[MessageAttributes] = []
 
@@ -233,6 +255,11 @@ class MessageDownloader:
         logger.info("dialog #%d: messages downloaded", dialog["id"])
 
     async def _semaphored_download_dialog(self, *args, **kwargs):
+        """
+        A utility function to restrict throughput of `_download_dialog` method.
+        It is necessary due to Telegram's request rate limits, which produces
+        "429 Too Many Requests" errors.
+        """
         async with self._semaphore:
             await self._download_dialog(*args, **kwargs)
 
