@@ -1,3 +1,7 @@
+venv
+data_personal
+logs
+
 .venv/*
 data/*
 

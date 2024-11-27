@@ -1,0 +1,4 @@
+telethon==1.31.0
+pandas==2.0.3
+numpy<2.0.0
+rich

@@ -1,47 +1,159 @@
-# Telegram data collector v0.01
-Combination of tools to download your telegram data.
+# Telegram Data Collection V2
+
+This repository is a fork of the original [telegram-data-collection](https://github.com/SanGreel/telegram-data-collection) by SanGreel, created as a gesture of gratitude for the enriching course on Computational Social Sciences. 🙏📚
+
+## What's New? 🚀
+
+This fork introduces several enhancements to elevate the original project's functionality for the future generations of students:
+- 🛠️ **Code Refactoring**
+- 📊 **Logging**
+-  ⚡ **Asynchronous Execution**
+- ✨ **Status Bars**
+- ⏩ **Execution Speedup** (not sure, need to be confirmed by measurements)
 
 
-### Structure
-##### 0_download_dialogs_list.py
-Download dialogs meta data for account.
+## Project Structure
+```
+telegram-data-collection-v2/
+├── config/
+│   └── config.json
+├── data_personal/ (will be created after run)
+│   ├── dialogs_data/
+│   └── dialogs_list/
+├── logs/ (will be created after run)
+│   ├── download_dialogs_data.log
+│   └── download_dialogs_list.log
+├── utils/
+│   ├── __init__.py
+│   └── config.py
+├── download_dialogs_list.py
+├── download_dialogs_data.py
+├── requirements.in
+├── requirements.txt
+└── README.md
+```
+## Setup
 
-`--dialogs_limit`
-number of dialogs
+1. **Clone the repository**:
 
-`-h`
-show this help message and exit
+    ```bash
+    git clone https://github.com/mark2002007/telegram-data-collection-v2
+    cd telegram-data-collection-v2
+    ```
 
-`--config_path`
-path to config file
+2. **Create a Virtual Environment**
 
-`--debug_mode`
-Debug mode
+    ```bash
+    python3.11 -m venv venv
+    source venv/bin/activate
+    ```
 
-`--skip_progress`
-Download all messages from scratch, ignoring any previously downloaded data. If not set, the script will check for existing `.csv` files in the `../data/dialogs` folder. It will then download any new messages since the last download, followed by older messages starting from the oldest message in the existing CSV file.
-`--all_at_once`
-Download all messages all at once instead of in batches of 10,000 messages
-##### 1_download_dialogs_data.py
-Download all messages from the dialogs.
+2. **Install dependencies**:
 
-Use flags `--skip_private`, `--skip_groups`, and `--skip_channels`
-to skip private chats, groups, and channels respectively.
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-### Requirements
-Python 3.8.13
+3. **Configure**:
 
+    - Create a `config.json` in the `config/` directory with your Telegram API credentials from https://my.telegram.org/apps.
 
-### How to run
-0. create virtual env
-```python -m venv .venv```
-1. activate virtual env
-```. .venv/bin/activate```
-2. install dependencies 
-```pip install -r requirements.txt```
-3. get your credentials https://my.telegram.org/apps
-4. set credentials (api_id, api_hash) in *config/config.json* (can be based on the *config_example.json*)
+    ```json
+    {
+        "api_id": "",
+        "api_hash": "",
+        "dialogs_data_folder": "../data/dialogs",
+        "dialogs_list_folder": "../data/dialogs_meta",
+        "logs_folder": "./logs"
+    }
+    ```
 
-### How to start
-0. ```python 0_download_dialogs_list.py --dialogs_limit -1```
-1. ```python 1_download_dialogs_data.py --dialogs_ids -1 --dialog_msg_limit -1```
+## Usage
+
+### 1. Download Dialogs List
+
+```bash
+python download_dialogs_list.py --concurrency -1
+```
+
+#### **Options:**
+
+- `--dialogs_limit`:  
+  **Type:** `int`  
+  **Default:** `-1` (Download all dialogs)  
+  **Description:** Number of dialogs to download.
+
+- `--config_path`:  
+  **Type:** `str`  
+  **Default:** `config/config.json`  
+  **Description:** Path to the configuration file.
+
+- `--log_level`:  
+  **Type:** `str`  
+  **Choices:** `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`  
+  **Default:** `INFO`  
+  **Description:** Set the logging level.
+
+- `--debug`:  
+  **Action:** `store_true`  
+  **Description:** Enable debug mode (sets log level to DEBUG). Overrides `--log_level`.
+
+- `--session_name`:  
+  **Type:** `str`  
+  **Default:** `tmp`  
+  **Description:** Session name for `TelegramClient`.
+
+- `--concurrency`:  
+  **Type:** `int`  
+  **Default:** `1`  
+  **Description:** Number of dialogs to process concurrently. Use `-1` for maximum concurrency based on CPU cores.
+
+### 2. **Download Dialogs Data**
+
+This script downloads messages and reactions for each Telegram dialog.
+
+```bash
+python download_dialogs_data.py --concurrency -1
+```
+
+#### **Options:**
+
+- `--dialogs_limit`:  
+  **Type:** `int`  
+  **Default:** `-1` (Download data for all dialogs)  
+  **Description:** Number of dialogs to download data from.
+
+- `--config_path`:  
+  **Type:** `str`  
+  **Default:** `config/config.json`  
+  **Description:** Path to the configuration file.
+
+- `--log_level`:  
+  **Type:** `str`  
+  **Choices:** `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`  
+  **Default:** `INFO`  
+  **Description:** Set the logging level.
+
+- `--debug`:  
+  **Action:** `store_true`  
+  **Description:** Enable debug mode (sets log level to DEBUG). Overrides `--log_level`.
+
+- `--session_name`:  
+  **Type:** `str`  
+  **Default:** `tmp`  
+  **Description:** Session name for `TelegramClient`.
+
+- `--concurrency`:  
+  **Type:** `int`  
+  **Default:** `1`  
+  **Description:** Number of dialogs to process concurrently. Use `-1` for maximum concurrency based on CPU cores.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+
+## License
+
+[MIT License](LICENSE)
+
+---
