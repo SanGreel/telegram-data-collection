@@ -15,7 +15,7 @@ def assert_message_json_equal(msg1: dict[str, Any], msg2: dict[str, Any]):
                 msg2[key]
             )
         elif key == "reactions":
-            assert eval(msg1[key]) == eval(msg2[key])
+            assert eval(msg1[key]) == eval(msg2[key])  # pylint: disable=eval-used
         else:
             assert msg1[key] == msg2[key]
 
@@ -39,7 +39,7 @@ def test_write_message(tmp_path):
     # Act
     writer.write_messages(dialog, [msg])
     # Assert
-    with open(tmp_path / f"{dialog['id']}.csv") as f:
+    with open(tmp_path / f"{dialog['id']}.csv", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         data = next(reader)
     assert_message_json_equal(
@@ -56,3 +56,15 @@ def test_write_message(tmp_path):
             "reactions": str(msg["reactions"]),
         },
     )
+
+
+def test_message_list_empty(tmp_path):
+    # Arrange
+    dialog = DialogMetadata(id=1, name="test_dialog", type=DialogType.PRIVATE, users=[])
+    writer = CSVMessageWriter(tmp_path)
+    # Act
+    writer.write_messages(dialog, [])
+    # Assert
+    with open(tmp_path / f"{dialog['id']}.csv", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        assert not list(reader)
