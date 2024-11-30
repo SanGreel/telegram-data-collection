@@ -49,7 +49,7 @@ This repo consists of two parts:
 
     ```bash
     git clone <repo-url>
-    cd telegram-data-collector
+    cd telegram-data-collection
     ```
 
 1. Install package manager used by the project - [Poetry](https://python-poetry.org/)
@@ -77,6 +77,8 @@ This repo consists of two parts:
     ```
 
     For basic usage, you only need to fill in the `API_ID` and `API_HASH` values. These can be obtained from [my.telegram.org](https://my.telegram.org/apps).
+
+    _NOTE_: for detailed information on the message downloading progress, set "LOG_LEVEL" variable to "DEBUG". This allows the logs to include messages on per-chat downloading progress.
 
 ## Usage
 

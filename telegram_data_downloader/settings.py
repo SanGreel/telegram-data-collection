@@ -12,6 +12,7 @@ API_ID = int(config("API_ID", cast=int))
 
 API_HASH = str(config("API_HASH", cast=str))
 
+# API version the client is using. Do not change unless you know what you are doing.
 CLIENT_SYSTEM_VERSION = "4.16.30-vxCUSTOM"
 
 
@@ -71,8 +72,10 @@ DIALOGS_LIST_FOLDER = Path(
 
 # General running settings
 
+# Set to "DEBUG" in config file for detailed info on per-chat download progress.
 LOG_LEVEL = config("LOG_LEVEL", default="INFO")
 
+# Message formatting for logging. Do not change unless you know what you are doing.
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
