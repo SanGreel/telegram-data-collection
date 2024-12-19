@@ -1,4 +1,3 @@
-import logging
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch, call
 from datetime import datetime
