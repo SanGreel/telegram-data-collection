@@ -2,9 +2,9 @@ import csv
 from typing import Any
 from datetime import datetime
 
-from .csv import CSVMessageWriter
-from ..dict_types.message import MessageType, PeerID, MessageAttributes
-from ..dict_types.dialog import DialogMetadata, DialogType
+from telegram_data_downloader.loader.csv import CSVMessageWriter
+from telegram_data_downloader.dict_types.message import MessageType, PeerID, MessageAttributes
+from telegram_data_downloader.dict_types.dialog import DialogMetadata, DialogType
 
 
 def assert_message_json_equal(msg1: dict[str, Any], msg2: dict[str, Any]):
