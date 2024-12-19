@@ -76,13 +76,13 @@ Thank you for considering contributing to the Telegram Data Collector project! W
 1. Run the tests:
 
     ```bash
-    pytest -v
+    PYTHONPATH=$(pwd) pytest -v
     ```
 
     If you want to run test coverage, you can use:
 
     ```bash
-    pytest --cov=telegram_data_downloader
+    PYTHONPATH=$(pwd) pytest --cov=telegram_data_downloader
     ```
 
 1. After making all your changes, run `ruff` and `pylint` for format validation:
