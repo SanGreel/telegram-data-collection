@@ -102,6 +102,59 @@ This repo consists of two parts:
     Note: in case you want to provide dialog ids and you need to enter a negative value for chat id, start your value with `" <your values>"` (enter value in quotes and add a whitespace at the start).
     E.g. `--dialog-ids " -1234567890"`.
 
+## Makefile Commands
+
+This project uses a `Makefile` to simplify common development tasks. Below is a description of the available commands and their purposes:
+
+### Setup
+```bash
+make setup
+```
+- Installs [Poetry](https://python-poetry.org/) if not already installed.
+- Configures a local virtual environment within the project directory.
+- Installs all required dependencies, including development dependencies, as defined in `pyproject.toml`.
+- Skips installing the project itself (`--no-root`).
+
+---
+
+### Test
+```bash
+make test
+```
+- Runs all test cases using `pytest`.
+- Ensures the `PYTHONPATH` is set to the current directory for correct module imports.
+
+---
+
+### Coverage
+```bash
+make coverage
+```
+- Runs tests with `pytest` while generating a code coverage report.
+- Includes a detailed report of any lines or branches missing coverage.
+
+---
+
+### Ruff
+```bash
+make ruff
+```
+- Runs [Ruff](https://github.com/charliermarsh/ruff) to lint the codebase and check for style violations.
+
+---
+
+### Pylint
+```bash
+make pylint
+```
+- Runs [Pylint](https://pylint.pycqa.org/) on the `telegram_data_downloader` module.
+
+---
+
+### Notes
+- To run any command, simply type `make <command>` in the terminal.
+- Ensure Python 3.11 and `make` are installed on your system before running these commands.
+
 ## Contributing
 
 If you want to contribute to the project, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
