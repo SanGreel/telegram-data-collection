@@ -5,6 +5,7 @@ tmp.session
 tmp.session-journal
 
 config/config.json
+.env
 
 .idea/
 
@@ -13,6 +14,7 @@ config/config.json
 */.ipynb_checkpoints/*
 
 # IPython
+ipython_scripts/
 profile_default/
 ipython_config.py
 
