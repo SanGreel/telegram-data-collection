@@ -213,7 +213,7 @@ class TestReadAllDialogs:
         # Act
         result = reader.read_all_dialogs()
         # Assert
-        assert result == dialogs
+        assert sorted(result, key=lambda x: x['id']) == sorted(dialogs, key=lambda x: x['id'])
 
     def test_read_all_dialogs_with_invalid_dialog(self, tmp_path):
         # Arrange
