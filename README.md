@@ -155,6 +155,9 @@ make pylint
 - To run any command, simply type `make <command>` in the terminal.
 - Ensure Python 3.11 and `make` are installed on your system before running these commands.
 
+## GitHub Actions
+To ensure the codebase is always in a good state, this project uses GitHub Actions to run tests, linting, and code coverage checks on every push to the repository. The status of these checks can be seen in the "Actions" tab of the repository. Apart from that, keep in mind that the successfull run of the GitHub Actions is required for the PR to be merged.
+
 ## Contributing
 
 If you want to contribute to the project, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
