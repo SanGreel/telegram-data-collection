@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Run Tests & Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Create minimal test environment
+        run: |
+          echo "API_ID=12345" >> .env
+          echo "API_HASH=test_hash" >> .env
+          echo "LOG_LEVEL=INFO" >> .env
+
+      - name: Configure makefile
+        run: |
+          make setup
+          make test
+          make coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  lint:
+    name: Run Linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup and run linters
+        run: |
+          make setup
+          make ruff
+          make pylint
