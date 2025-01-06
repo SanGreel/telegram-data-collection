@@ -2,6 +2,7 @@
 
 Combination of Python scripts that allow to download data from Telegram, consisting from all dialog metadata (names, members, etc.) and messages from those chats.
 
+
 ## Structure
 
 This repo consists of two parts:
